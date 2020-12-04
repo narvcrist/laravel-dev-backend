@@ -10,6 +10,7 @@ class Address extends Model
     use HasFactory;
 
     protected $connection = 'pgsql-ignug';
+    protected $table = 'ignug.address';
 
     protected $fillable = [
         'latitud',

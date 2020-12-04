@@ -1,11 +1,12 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Ignug;
 
-use App\Models\Observation;
+use App\Http\Controllers\Controller;
+use App\Models\Ignug\Position;
 use Illuminate\Http\Request;
 
-class ObservationController extends Controller
+class PositionController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -31,10 +32,10 @@ class ObservationController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Observation  $observation
+     * @param  \App\Models\Ignug\Position  $position
      * @return \Illuminate\Http\Response
      */
-    public function show(Observation $observation)
+    public function show(Position $position)
     {
         //
     }
@@ -43,10 +44,10 @@ class ObservationController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Observation  $observation
+     * @param  \App\Models\Ignug\Position  $position
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Observation $observation)
+    public function update(Request $request, Position $position)
     {
         //
     }
@@ -54,10 +55,10 @@ class ObservationController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\Observation  $observation
+     * @param  \App\Models\Ignug\Position  $position
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Observation $observation)
+    public function destroy(Position $position)
     {
         //
     }

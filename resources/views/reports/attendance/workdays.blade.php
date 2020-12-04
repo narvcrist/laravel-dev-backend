@@ -22,7 +22,7 @@
             <td>{{$report['days13']}}</td>
             <td>{{$report['days18']}}</td>
             <td></td>
-            <td></td>
+            <td>{{$report['position']}}</td>
             <td>{{$report['institution']}}</td>
             <td>{{$report['user']['personal_email']}}</td>
         </tr>

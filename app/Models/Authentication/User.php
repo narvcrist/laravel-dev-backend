@@ -2,6 +2,7 @@
 
 namespace App\Models\Authentication;
 
+use App\Models\Ignug\AdministrativeStaff;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -29,6 +30,7 @@ class User extends Authenticatable implements Auditable
     use StatusDeletedTrait;
 
     protected $connection = 'pgsql-authentication';
+    protected $table = 'authentication.users';
 
     const ATTEMPTS = 3;
 
@@ -150,6 +152,11 @@ class User extends Authenticatable implements Auditable
     public function attendance()
     {
         return $this->morphOne(Attendance::class, 'attendanceable');
+    }
+
+    public function administrativeStaff()
+    {
+        return $this->hasOne(AdministrativeStaff::class);
     }
 
     public function findForPassport($username)

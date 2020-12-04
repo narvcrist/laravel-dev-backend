@@ -38,7 +38,7 @@
                             sin la autorización de la Institución.
                         </small>
                         <p class="small">Favor no responder este mensaje que ha sido emitido automáticamente por el
-                            sistema SIGA-A.</p>
+                            sistema IGNUG.</p>
                     </footer>
                 </div>
             </div>

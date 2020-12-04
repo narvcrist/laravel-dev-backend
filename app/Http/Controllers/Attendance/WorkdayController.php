@@ -130,6 +130,16 @@ class WorkdayController extends Controller
                     $catalogues['workday']['type']['work'])->where('type', $catalogues['workday']['type']['type'])->first()->id)
                 ->get();
 
+            if (sizeof($works) === 1 && $works[0]->end_time === null) {
+                return response()->json([
+                    'data' => null,
+                    'msg' => [
+                        'summary' => 'Ya tiene otra jornada iniciada',
+                        'detail' => 'Debe finalizar antes de iniciar otra',
+                        'code' => '403',
+                    ]], 403);
+            }
+
             if (sizeof($works) > 1) {
                 return response()->json([
                     'data' => null,
@@ -202,7 +212,18 @@ class WorkdayController extends Controller
                 ]], 404);
         }
 
-
+        if ($workday->type->code === $catalogues['workday']['type']['work']
+            && $attendance->workdays()->where('duration', null)->whereHas('type', function ($type) use ($catalogues) {
+                $type->where('code', $catalogues['workday']['type']['lunch']);
+            })->first()) {
+            return response()->json([
+                'data' => null,
+                'msg' => [
+                    'summary' => 'Debe finalizar el almuerzo',
+                    'detail' => 'Intente de nuevo',
+                    'code' => '403',
+                ]], 403);
+        }
         if ($workday !== null && $workday->end_time === null) {
             $workday->update([
                 'end_time' => $currentTime,

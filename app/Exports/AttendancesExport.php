@@ -16,20 +16,29 @@ class AttendancesExport implements FromView
     private $totalSeconds = 0;
     private $totalMinutes = 0;
     private $totalHours = 0;
-    private $date;
+    private $startDate;
+    private $endDate;
     private $institutionId;
 
     public function view(): View
     {
 
-        $users = User::whereHas('institutions', function ($institutions) {
+        $users = User::
+        whereHas('institutions', function ($institutions) {
             $institutions->where('institutions.id', $this->institutionId);
-        })->has('teacher')
-            ->with('institutions')->get();
-        $start_13 = (new Carbon($this->date))->subDays(13);
-        $end_13 = (new Carbon($this->date))->subDays(1);
-        $start_18 = (new Carbon($this->date));
-        $end_18 = (new Carbon($this->date))->addDays(17);
+        })
+            ->has('administrativeStaff')
+            ->with(['administrativeStaff'=>function($administrativeStaff){
+                $administrativeStaff->with('position');
+            }])
+            ->with('institutions')
+            ->orderBy('first_lastname')
+            ->get();
+
+        $start_13 = (new Carbon($this->startDate));
+        $end_18 = (new Carbon($this->endDate));
+        $end_13 = (new Carbon('first day of ' . $end_18->englishMonth . ' ' . $end_18->year))->subDays(1);
+        $start_18 = (new Carbon('first day of ' . $end_18->englishMonth . ' ' . $end_18->year));
 
         $weekends13 = 0;
         while ($start_13 <= $end_13) {
@@ -38,7 +47,7 @@ class AttendancesExport implements FromView
             }
             $start_13->modify("+1 days");
         }
-
+        $start_13 = (new Carbon($this->startDate));
         $weekends18 = 0;
         while ($start_18 <= $end_18) {
             if ($start_18->format('l') == 'Saturday' || $start_18->format('l') == 'Sunday') {
@@ -46,20 +55,21 @@ class AttendancesExport implements FromView
             }
             $start_18->modify("+1 days");
         }
-        $start_13 = (new Carbon($this->date))->subDays(13);
-        $end_13 = (new Carbon($this->date))->subDays(1);
-        $start_18 = (new Carbon($this->date));
-        $end_18 = (new Carbon($this->date))->addDays(17);
+        $start_18 = (new Carbon('first day of ' . $end_18->englishMonth . ' ' . $end_18->year));
+
         $reports = array();
         foreach ($users as $user) {
-            $attendances13 = $user->attendances()->with(['workdays' => function ($workdays) {
+            $attendances13 = $user->attendances()->where('institution_id', $this->institutionId)->with(['workdays' => function ($workdays) {
                 $workdays->with('type');
             }])
                 ->whereBetween('date', [$start_13, $end_13])
                 ->get();
+
             foreach ($attendances13 as $attendance) {
                 foreach ($attendance->workdays as $workday) {
-                    $this->calculateTotalDuration($workday->duration, $workday->type->code);
+                    if ($workday->duration) {
+                        $this->calculateTotalDuration($workday->duration, $workday->type->code);
+                    }
                 }
             }
 
@@ -73,7 +83,7 @@ class AttendancesExport implements FromView
                 $totalHours13++;
             }
 
-            $attendances18 = $user->attendances()->with(['workdays' => function ($workdays) {
+            $attendances18 = $user->attendances()->where('institution_id', $this->institutionId)->with(['workdays' => function ($workdays) {
                 $workdays->with('type');
             }])
                 ->whereBetween('date', [$start_18, $end_18])
@@ -84,7 +94,9 @@ class AttendancesExport implements FromView
             $this->totalHours = 0;
             foreach ($attendances18 as $attendance) {
                 foreach ($attendance->workdays as $workday) {
-                    $this->calculateTotalDuration($workday->duration, $workday->type->code);
+                    if ($workday->duration) {
+                        $this->calculateTotalDuration($workday->duration, $workday->type->code);
+                    }
                 }
             }
             $totalHours18 = $this->totalHours;
@@ -100,6 +112,7 @@ class AttendancesExport implements FromView
                 array_push($reports,
                     [
                         'month' => $start_18->formatLocalized('%B'),
+                        'position' => json_decode(json_encode($user))->administrative_staff->position->name,
                         'user' => $user,
                         'institution' => $user->institutions[0]->denomination . ' ' . $user->institutions[0]->name,
                         'days13' => ($totalHours13 / 8) + $weekends13,
@@ -122,9 +135,15 @@ class AttendancesExport implements FromView
         return $this;
     }
 
-    public function date(string $date)
+    public function startDate(string $startDate)
     {
-        $this->date = $date;
+        $this->startDate = $startDate;
+        return $this;
+    }
+
+    public function endDate(string $endDate)
+    {
+        $this->endDate = $endDate;
         return $this;
     }
 

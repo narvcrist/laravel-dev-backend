@@ -14,6 +14,7 @@ class Catalogue extends Model implements Auditable
     use \OwenIt\Auditing\Auditable;
 
     protected $connection = 'pgsql-ignug';
+    protected $table = 'ignug.catalogues';
 
     const STATUS_AVAILABLE = 'AVAILABLE';
     const STATUS_MAINTENANCE = 'MAINTENANCE';

@@ -11,6 +11,7 @@ class Authority extends Model implements Auditable
     use \OwenIt\Auditing\Auditable;
     use HasFactory;
     protected $connection = 'pgsql-ignug';
+    protected $table = 'ignug.authorities';
     protected $fillable = [
         'code',
         'name',

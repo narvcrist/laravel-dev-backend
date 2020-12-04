@@ -32,34 +32,31 @@ class TasksExport implements FromView
             . ' al ' . $endDate->format('d') . ' de ' . $endDate->formatLocalized('%B');
         $reports = array();
         foreach ($users as $user) {
-            $attendances = $user->attendances()->with(['tasks' => function ($workdays) {
-                $workdays->with(['type' => function ($type) {
-                    $type->with(['parent' => function ($parent) {
-                        $parent->orderBy('name');
+            $attendances = $user->attendances()->where('institution_id', $this->institutionId)
+                ->with(['tasks' => function ($workdays) {
+                    $workdays->with(['type' => function ($type) {
+                        $type->with(['parent' => function ($parent) {
+                            $parent->orderBy('name');
+                        }]);
                     }]);
-                }]);
-            }])
+                }])
                 ->whereBetween('date', [$this->startDate, $this->endDate])
                 ->orderBy('date')
                 ->get();
+
             $tasks = array();
-            $processes = array();
             foreach ($attendances as $attendance) {
                 foreach ($attendance->tasks as $task) {
                     array_push($tasks, $task);
                 }
             }
 
-
-            //if (sizeof($attendances) > 0) {
             array_push($reports,
                 [
                     'attendances' => $attendances,
                     'user' => $user,
                     'tasks' => $tasks
                 ]);
-            //}
-            $task = array();
         }
 
         return view('reports.attendance.tasks', [

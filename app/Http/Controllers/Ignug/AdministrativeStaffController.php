@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers\Ignug;
 
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 
-class AuthorityController extends Controller
+class AdministrativeStaffController extends Controller
 {
     //
 }

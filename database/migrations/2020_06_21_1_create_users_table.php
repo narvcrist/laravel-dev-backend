@@ -17,6 +17,8 @@ class CreateUsersTable extends Migration
             $table->foreignId('gender_id')->nullable()->constrained('ignug.catalogues');
             $table->foreignId('state_id')->constrained('ignug.states');
             $table->foreignId('status_id');
+            $table->foreignId('blood_type_id')->nullable()->constrained('ignug.catalogues');
+            $table->foreignId('civil_status_id')->nullable()->constrained('ignug.catalogues');
             $table->string('avatar')->nullable()->unique();
             $table->string('username', 50)->unique();
             $table->string('identification', 20);
@@ -26,7 +28,6 @@ class CreateUsersTable extends Migration
             $table->string('second_lastname', 100)->nullable();
             $table->string('personal_email', 100)->nullable()->unique();
             $table->date('birthdate')->nullable();
-            $table->foreignId('blood_type_id')->nullable()->constrained('ignug.catalogues');
             $table->string('email', 100)->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password', 200);

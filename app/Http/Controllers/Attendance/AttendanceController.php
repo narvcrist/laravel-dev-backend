@@ -20,6 +20,22 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class AttendanceController extends Controller
 {
+
+    public function getBirthdate()
+    {
+        $users = User::has('administrativeStaff')
+            ->orderByRaw("to_char(birthdate, 'MM-dd')")
+            ->get();
+
+        return response()->json([
+            'data' => $users,
+            'msg' => [
+                'summary' => 'success',
+                'detail' => '',
+                'code' => '200',
+            ]], 200);
+    }
+
     public function getCurrentDay(Request $request)
     {
         $users = User::with(['attendance' => function ($attendances) use ($request) {
@@ -519,13 +535,24 @@ class AttendanceController extends Controller
 
     public function reportAttendances(Request $request)
     {
-//        $users = User::with(['institutions' => function ($institutions) use ($request) {
-//            $institutions->where('institutions.id', $request->institution_id);
-//        }])->get();
-//        $start_13 = (new Carbon('2020-12-01'))->subDays(13);
-//        $end_13 = (new Carbon('2020-12-01'))->subDays(1);
-//        $start_18 = (new Carbon('2020-12-01'));
-//        $end_18 = (new Carbon('2020-12-01'))->addDays(17);
+//        $institution = Institution::findOrFail($request->institution_id);
+//        $users = User::whereHas('institutions', function ($institutions) use ($institution) {
+//            $institutions->where('institutions.id', $institution->id);
+//        })
+//
+//            ->with(['administrativeStaff' => function ($administrativeStaff) {
+//                $administrativeStaff->with('position');
+//            }])
+//            ->with('institutions')
+//            ->get();
+//
+//        return $users;
+//        $start_13 = (new Carbon($request->start_date));
+//        $end_18 = (new Carbon($request->end_date));
+//        $end_13 = (new Carbon('first day of ' . $end_18->englishMonth . ' ' . $end_18->year))->subDays(1);
+//        $start_18 = (new Carbon('first day of ' . $end_18->englishMonth . ' ' . $end_18->year));
+//
+//
 //        $weekends13 = 0;
 //        while ($start_13 <= $end_13) {
 //            if ($start_13->format('l') == 'Saturday' || $start_13->format('l') == 'Sunday') {
@@ -533,7 +560,7 @@ class AttendanceController extends Controller
 //            }
 //            $start_13->modify("+1 days");
 //        }
-//
+//        $start_13 = (new Carbon($request->start_date));
 //        $weekends18 = 0;
 //        while ($start_18 <= $end_18) {
 //            if ($start_18->format('l') == 'Saturday' || $start_18->format('l') == 'Sunday') {
@@ -541,20 +568,18 @@ class AttendanceController extends Controller
 //            }
 //            $start_18->modify("+1 days");
 //        }
-//
-//        $start_13 = (new Carbon('2020-12-01'))->subDays(13);
-//        $end_13 = (new Carbon('2020-12-01'))->subDays(1);
-//        $start_18 = (new Carbon('2020-12-01'));
-//        $end_18 = (new Carbon('2020-12-01'))->addDays(17);
+//        $start_18 = (new Carbon('first day of ' . $end_18->englishMonth . ' ' . $end_18->year));
 //
 //        $reports = array();
 //        foreach ($users as $user) {
 //            if (sizeof($user->institutions) > 0) {
+//
 //                $attendances13 = $user->attendances()->with(['workdays' => function ($workdays) {
 //                    $workdays->with('type');
 //                }])
 //                    ->whereBetween('date', [$start_13, $end_13])
 //                    ->get();
+//                return $attendances13;
 //                foreach ($attendances13 as $attendance) {
 //                    foreach ($attendance->workdays as $workday) {
 //                        $this->calculateTotalDuration($workday);
@@ -616,16 +641,18 @@ class AttendanceController extends Controller
 
         return (new AttendancesExport)
             ->institutionId((int)$request->institution_id)
-            ->date($request->date)
+            ->startDate($request->start_date)
+            ->endDate($request->end_date)
             ->download('attendances.xlsx');
     }
 
     public function reportTasks(Request $request)
     {
-//        $institution = Institution::findOrFail(2);
+//        $institution = Institution::findOrFail($request->institution_id);
 //        $users = User::whereHas('institutions', function ($institutions) use ($institution) {
 //            $institutions->where('institutions.id', $institution->id);
 //        })->has('teacher')->get();
+//        return $users;
 //
 //        $reports = array();
 //        foreach ($users as $user) {

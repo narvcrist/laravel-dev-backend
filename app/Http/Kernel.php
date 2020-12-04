@@ -45,7 +45,7 @@ class Kernel extends HttpKernel
             'auth:api',
             'check-status',
             'check-attempts',
-//            \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
     ];
 
