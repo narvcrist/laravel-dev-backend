@@ -6,8 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use App\Http\Controllers\Controller;
 use App\Models\TeacherEval\Question;
-use App\Models\TeacherEval\EvaluationType;
 use App\Models\TeacherEval\Answer;
+use App\Models\TeacherEval\EvaluationType;
 use App\Models\Ignug\Catalogue;
 use App\Models\Ignug\State;
 use Illuminate\Support\Facades\DB;
@@ -16,45 +16,79 @@ class QuestionController extends Controller
 {
     public function index()
     {
-        return Question::all();
+        $catalogues = json_decode(file_get_contents(storage_path(). '/catalogues.json'), true);
+        $state = State::where('code', $catalogues['state']['type']['active'])->first();
+
+        $questions = Question::with('status', 'type', 'evaluationType')->where('state_id',$state->id)->get();
+
+        if (sizeof($questions)=== 0) {
+            return response()->json([
+                'data' => null,
+                'msg' => [
+                    'summary' => 'Preguntas no encontradas',
+                    'detail' => 'Intenta de nuevo',
+                    'code' => '404'
+                ]], 404);
+        }
+        return response()->json(['data' => $questions,
+            'msg' => [
+                'summary' => 'Preguntas',
+                'detail' => 'Se consulto correctamente preguntas',
+                'code' => '200',
+            ]], 200);
     }
 
     public function show($id)
     {
         $question = Question::findOrFail($id);
-        return response()->json([
-            'data' =>[
-                'question' => $question
-            ]
-        ]);
+        if (!$question) {
+            return response()->json([
+                'data' => null,
+                'msg' => [
+                    'summary' => 'Pregunta no encontrada',
+                    'detail' => 'Intenta de nuevo',
+                    'code' => '404'
+                ]], 404);
+        }
+        return response()->json(['data' => $question,
+            'msg' => [
+                'summary' => 'Pregunta',
+                'detail' => 'Se consulto correctamente la pregunta',
+                'code' => '200',
+            ]], 200);
     }  
+
     public function store(Request $request){
+
+        $catalogues = json_decode(file_get_contents(storage_path(). '/catalogues.json'), true);
+
         $data = $request->json()->all();
 
        $dataQuestion = $data['question'];
-       $dataState = $data['state'];
-       $dataTypeId= $data['type_id'];
-       $dataEvaluationType= $data['evaluation_type_id'];
-       /* $dataAnswerId= $data['answer_id']; */
+       $dataEvaluationType= $data['evaluation_type'];
+       $dataType= $data['type'];
+       $dataStatus = $data['status'];
        
         $question = new Question();
         $question->code = $dataQuestion['code'];
         $question->order = $dataQuestion['order'];
         $question->name = $dataQuestion['name'];
-
-        $state = State::findOrFail($dataState['id']);
-        $type_id = Catalogue::find($dataTypeId['id']);
+        $question->description = $dataQuestion['description'];
+        
         $evaluationType = EvaluationType::findOrFail($dataEvaluationType['id']);
-        /* $answer_id = Question::find($dataAnswerId['id']); */
+        $type = Catalogue::find($dataType['id']);
+        $status = Catalogue::findOrFail($dataStatus['id']);
   
-        $question->state()->associate($state);
-        $question->type()->associate($type_id);
         $question->evaluationType()->associate($evaluationType);
+        $question->type()->associate($type);
+        $question->state()->associate(State::where('code', $catalogues['state']['type']['active'])->first());
+        $question->status()->associate($status);
 
         $question->save();
 
         $answersIds = array();
-        $answers = Answer::where('state_id', 1)
+        $catalogueStatus = Catalogue::where('type','STATUS')->Where('code','AVAILABLE')->first();
+        $answers = Answer::where('status_id', $catalogueStatus->id)
         ->get();
         foreach ($answers as $answer) {
             array_push($answersIds,$answer->id);
@@ -62,158 +96,85 @@ class QuestionController extends Controller
 
         $question->answers()->attach( $answersIds); 
         
-        return response()->json([
-        'data' => [
-            'questions' => $question
-        ]
-    ], 201);
+        if (!$question) {
+            return response()->json([
+                'data' => null,
+                'msg' => [
+                    'summary' => 'Pregunta no creada',
+                    'detail' => 'Intenta de nuevo',
+                    'code' => '404'
+                ]], 404);
+        }
+        return response()->json(['data' => $question,
+            'msg' => [
+                'summary' => 'Pregunta',
+                'detail' => 'Se creo correctamente la pregunta',
+                'code' => '201',
+            ]], 201);
     }
     public function update(Request $request, $id)
     {
         $data = $request->json()->all();
 
         $dataQuestion = $data['question'];
-        $dataState = $data['state'];
-        $dataTypeId= $data['type_id'];
-       $dataEvaluationType = $data['evaluation_type_id'];
+        $dataEvaluationType = $data['evaluation_type'];
+        $dataType= $data['type'];
+        $dataStatus = $data['status'];
 
-       $question = Question::findOrFail($id);
+        $question = Question::findOrFail($id);
         $question->code = $dataQuestion['code'];
         $question->order = $dataQuestion['order'];
         $question->name = $dataQuestion['name'];
+        $question->description = $dataQuestion['description'];
         
-
-        $state = State::findOrFail($dataState['id']);
-        $type_id = Catalogue::find($dataTypeId['id']);
+        $type = Catalogue::find($dataType['id']);
         $evaluationType = EvaluationType::findOrFail($dataEvaluationType['id']);
+        $status = Catalogue::findOrFail($dataStatus['id']);
 
-        $question->state()->associate($state);
-        $question->type()->associate($type_id);
         $question->evaluationType()->associate($evaluationType);
+        $question->type()->associate($type);
+        $question->status()->associate($status);
         
         $question->save();
-        return response()->json([
-            'data' => [
-                'questions' => $question
-            ]
-        ], 201);
+        
+        if (!$question) {
+            return response()->json([
+                'data' => null,
+                'msg' => [
+                    'summary' => 'Pregunta no actualizada',
+                    'detail' => 'Intenta de nuevo',
+                    'code' => '404'
+                ]], 404);
+        }
+        return response()->json(['data' => $question,
+            'msg' => [
+                'summary' => 'Pregunta',
+                'detail' => 'Se actualizo correctamente la pregunta',
+                'code' => '201',
+            ]], 201);
     }
 
     public function destroy($id)
     {
         $question = Question::findOrFail($id);
-/*         $catalogue->delete(); */
-/*         $evaluationType->update([
-            'state_id'=>'3'
-        ]); */
-
         $question->state_id = '3';
         $question->save();
 
-        return response()->json([
-            'data' => [
-                'questions' => $question
-            ]
-        ], 201);
-    }
-
-    public function indexAnswer()
-    {
-        $myArr = array();
-        $flights = Answer::where('state_id', 1)
-        ->get();
-        foreach ($flights as $flight) {
-            array_push($myArr,$flight->id);
+        if (!$question) {
+            return response()->json([
+                'data' => null,
+                'msg' => [
+                    'summary' => 'Pregunta no eliminada',
+                    'detail' => 'Intenta de nuevo',
+                    'code' => '404'
+                ]], 404);
         }
-        /* echo implode(",",$myArr); */
-        echo $myArr;
-    }
-
-    public function showAnswer($id)
-    {
-        $question = Answer::findOrFail($id);
-        return response()->json([
-            'data' =>[
-                'answers' => $question
-            ]
-        ]);
-    }  
-
-    public function storeAnswer(Request $request){
-        $data = $request->json()->all();
-
-       $dataAnswer = $data['answer'];
-       $dataState = $data['state'];
-       $dataTypeId= $data['type_id'];
-       
-        $answer = new Answer();
-        $answer->code = $dataAnswer['code'];
-        $answer->order = $dataAnswer['order'];
-        $answer->name = $dataAnswer['name'];
-        $answer->value = $dataAnswer['value'];
-
-        $state = State::findOrFail($dataState['id']);
-        $type_id = Catalogue::find($dataTypeId['id']);
-        
-  
-        $answer->state()->associate($state);
-        $answer->type()->associate($type_id);
-
-            $answer->save();
-
-        return response()->json([
-        'data' => [
-            'questions' => $answer
-        ]
-    ], 201);
-    }
-
-    public function updateAnswer(Request $request, $id)
-    {
-        $data = $request->json()->all();
-
-        $dataAnswer = $data['answer'];
-        $dataState = $data['state'];
-        $dataTypeId= $data['type_id'];
-
-       $answer = Answer::findOrFail($id);
-        $answer->code = $dataAnswer['code'];
-        $answer->order = $dataAnswer['order'];
-        $answer->name = $dataAnswer['name'];
-        $answer->value = $dataAnswer['value'];
-
-        
-
-        $state = State::findOrFail($dataState['id']);
-        $type_id = Catalogue::find($dataTypeId['id']);
-
-        $answer->state()->associate($state);
-        $answer->type()->associate($type_id);
-        
-        $answer->save();
-        return response()->json([
-            'data' => [
-                'answers' => $answer
-            ]
-        ], 201);
-    }
-
-    public function destroyAnswer($id)
-    {
-        $answer = Answer::findOrFail($id);
-/*         $catalogue->delete(); */
-/*         $evaluationType->update([
-            'state_id'=>'3'
-        ]); */
-
-        $answer->state_id = '3';
-        $answer->save();
-
-        return response()->json([
-            'data' => [
-                'answers' => $answer
-            ]
-        ], 201);
+        return response()->json(['data' => $question,
+            'msg' => [
+                'summary' => 'Pregunta',
+                'detail' => 'Se elimino correctamente la pregunta',
+                'code' => '201',
+            ]], 201);
     }
 
 }

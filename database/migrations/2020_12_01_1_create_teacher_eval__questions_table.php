@@ -10,13 +10,14 @@ class CreateTeacherEvalQuestionsTable extends Migration
     {
         Schema::connection('pgsql-teacher-eval')->create('questions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('evaluation_type_id')->nullable();
+            $table->foreignId('evaluation_type_id')->nullable()->comment('Tipo Evaluacion; Pares-Autoevaluacion-Coordinacion-Docente');
             $table->foreignId('type_id')->comment('Tipo Pregunta, Cuantitativa o Cualitativa')->constrained('ignug.catalogues');
-            $table->foreignId('state_id')->constrained('ignug.states');
-            $table->string('code')->unique();
-            $table->integer('order')->unique();
-            $table->string('name')->unique();
-            $table->text('description')->nullable();
+            $table->foreignId('status_id')->constrained('ignug.catalogues'); 
+            $table->foreignId('state_id')->comment('Activo o Inactivo')->constrained('ignug.states');
+            $table->string('code')->unique()->comment('Codigo Pregunta');
+            $table->integer('order')->unique()->comment('Orden Pregunta');
+            $table->string('name')->unique()->comment('Pregunta');
+            $table->text('description')->nullable()->comment('Descripcion Pregunta');
             $table->timestamps();
         });
     }

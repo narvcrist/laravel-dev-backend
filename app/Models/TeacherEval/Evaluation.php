@@ -5,6 +5,8 @@ namespace App\Models\TeacherEval;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Ignug\State;
+use App\Models\Ignug\Catalogue;
+use App\Models\Ignug\SchoolPeriod;
 use App\Models\Ignug\Teacher;
 use OwenIt\Auditing\Contracts\Auditable;
 
@@ -37,6 +39,14 @@ class Evaluation extends Model implements Auditable
     public function detailEvaluations()
     {
         return $this->hasMany(DetailEvaluation::class);
+    }
+    public function status()
+    {
+        return $this->belongsTo(Catalogue::class, "status_id");
+    }
+    public function schoolPeriod()
+    {
+        return $this->belongsTo(SchoolPeriod::class);
     }
 
 }

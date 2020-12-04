@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use OwenIt\Auditing\Contracts\Auditable;
 use App\Models\Ignug\State;
+use App\Models\Ignug\Catalogue;
+
 
 class EvaluationType extends Model implements Auditable
 {
@@ -30,4 +32,9 @@ class EvaluationType extends Model implements Auditable
     {
         return $this->belongsTo(EvaluationType::class, 'parent_id');
     }
+    public function status()
+    {
+        return $this->belongsTo(Catalogue::class,'status_id');
+    }
+    
 }

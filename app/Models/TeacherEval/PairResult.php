@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use OwenIt\Auditing\Contracts\Auditable;
 use App\Models\Ignug\State;
+use App\Models\Ignug\Authority;
 
 class PairResult extends Model implements Auditable
 {
@@ -27,6 +28,10 @@ class PairResult extends Model implements Auditable
     public function state()
     {
         return $this->belongsTo(State::class);
+    }
+    public function authority()
+    {
+        return $this->belongsTo(Authority::class);
     }
     
 }

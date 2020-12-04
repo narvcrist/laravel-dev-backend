@@ -11,11 +11,24 @@ class EvaluationTypeController extends Controller
 {
     public function index()
     {
-        $state = State::firstWhere('code', State::ACTIVE);
-        $evaluationTypes = EvaluationType::whereHas('state', function ($query) use ($state) {
-            $query->where(id, $state->id);
-        })->get();
-        return response()->json(['data'=>$evaluationTypes],200);
+        $evaluationTypes = EvaluationType::where('state_id',State::where('code', '1')->first()->id)
+        ->with('status')->get();
+        // return response()->json(['data'=>$evaluationTypes],200);
+        if (sizeof($evaluationTypes)=== 0) {
+            return response()->json([
+                'data' => null,
+                'msg' => [
+                    'summary' => 'Catalogos no encontrando',
+                    'detail' => 'Intenta de nuevo',
+                    'code' => '404'
+                ]], 404);
+        }
+        return response()->json(['data' => $evaluationTypes,
+            'msg' => [
+                'summary' => 'Tipos de Evaluación',
+                'detail' => 'Se consulto correctamente tipos',
+                'code' => '200',
+            ]], 200);
     }
 
     public function show($id)
