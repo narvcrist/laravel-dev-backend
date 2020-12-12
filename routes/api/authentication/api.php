@@ -26,7 +26,7 @@ Route::group(['prefix' => 'auth'], function () {
 Route::apiResource('permissions', PermissionController::class);
 Route::apiResource('routes', RouteController::class);
 Route::apiResource('shortcuts', ShortcutController::class);
-Route::apiResource('users', UserController::class)->except(['index']);
+Route::apiResource('users', UserController::class);
 
 Route::group(['prefix' => 'users'], function () {
     Route::post('filters', [UserController::class, 'index']);

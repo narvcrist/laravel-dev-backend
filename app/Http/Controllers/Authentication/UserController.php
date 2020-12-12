@@ -20,24 +20,38 @@ class  UserController extends Controller
 {
     public function index(Request $request)
     {
+        $system = System::where('code', $request->system_code)->first();
         if ($request->has('conditions') && $request->conditions && $request->conditions != 'undefined') {
             $users = User::where(function ($query) use ($request) {
                     $query->orWhere($this->filter($request->conditions));
                 })
-                ->with('ethnicOrigin')
-                ->with('location')
-                ->with('identificationType')
-                ->with('sex')
-                ->with('gender')
-                ->with('roles')
+                ->with(['institutions' => function ($institutions) {
+                    $institutions->orderBy('name');
+                }])
+                ->with(['roles' => function ($roles) use ($request, $system) {
+                    $roles
+                        ->with('system')
+                        ->with(['permissions' => function ($permissions) {
+                            $permissions->with(['route' => function ($route) {
+                                $route->with('module')->with('type')->with('images')->with('status');
+                            }])->with('institution');
+                        }])->where('system_id', $system->id);
+                }])
                 ->paginate($request->per_page);
         } else {
             $users = User::with('ethnicOrigin')
-                ->with('location')
-                ->with('identificationType')
-                ->with('sex')
-                ->with('gender')
-                ->with('roles')
+                ->with(['institutions' => function ($institutions) {
+                    $institutions->orderBy('name');
+                }])
+                ->with(['roles' => function ($roles) use ($request, $system) {
+                    $roles
+                        ->with('system')
+                        ->with(['permissions' => function ($permissions) {
+                            $permissions->with(['route' => function ($route) {
+                                $route->with('module')->with('type')->with('images')->with('status');
+                            }])->with('institution');
+                        }])->where('system_id', $system->id);
+                }])
                 ->paginate($request->per_page);
         }
         return response()->json([

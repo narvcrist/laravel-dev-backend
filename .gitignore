@@ -1,6 +1,6 @@
 /.idea
 /idea
-/public
+#/public
 #/public/storage
 #/storage/*.key
 /vendor
