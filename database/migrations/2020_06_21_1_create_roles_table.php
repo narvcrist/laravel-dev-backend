@@ -13,6 +13,7 @@ class CreateRolesTable extends Migration
             $table->string('code')->comment('No debe ser modificado una vez que se lo crea');
             $table->text('name');
             $table->foreignId('system_id')->comment('Para que el rol pertenezca a un sistema');
+            $table->foreignId('institution_id')->constrained('ignug.institutions');
             $table->foreignId('state_id')->constrained('ignug.states');
             $table->timestamps();
         });

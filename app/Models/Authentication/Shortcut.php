@@ -2,7 +2,6 @@
 
 namespace App\Models\Authentication;
 
-use App\Models\Ignug\Image;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -13,6 +12,16 @@ class Shortcut extends Model
     const TYPE = 'SHORTCUTS';
 
     protected $fillable = ['image'];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function role()
+    {
+        return $this->belongsTo(Role::class);
+    }
 
     public function route()
     {

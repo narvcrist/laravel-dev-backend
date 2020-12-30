@@ -64,7 +64,7 @@ class  AuthController extends Controller
 
     public function resetAttempts($username)
     {
-        $user = User::where('username', $username)->first();
+        $user = User::firstWhere('username', $username);
 
         if (!$user) {
             return response()->json([

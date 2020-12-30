@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Authentication\User\UserCreateRequest;
 use App\Http\Requests\Authentication\UserRequest;
 use App\Models\Authentication\PassworReset;
+use App\Models\Authentication\Role;
 use App\Models\Authentication\System;
 use App\Models\Ignug\Catalogue;
 use App\Models\Ignug\State;
@@ -18,44 +19,16 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class  UserController extends Controller
 {
-    public function index(Request $request)
+    public function getRoles(Request $request)
     {
-        $system = System::where('code', $request->system_code)->first();
-        if ($request->has('conditions') && $request->conditions && $request->conditions != 'undefined') {
-            $users = User::where(function ($query) use ($request) {
-                    $query->orWhere($this->filter($request->conditions));
-                })
-                ->with(['institutions' => function ($institutions) {
-                    $institutions->orderBy('name');
-                }])
-                ->with(['roles' => function ($roles) use ($request, $system) {
-                    $roles
-                        ->with('system')
-                        ->with(['permissions' => function ($permissions) {
-                            $permissions->with(['route' => function ($route) {
-                                $route->with('module')->with('type')->with('images')->with('status');
-                            }])->with('institution');
-                        }])->where('system_id', $system->id);
-                }])
-                ->paginate($request->per_page);
-        } else {
-            $users = User::with('ethnicOrigin')
-                ->with(['institutions' => function ($institutions) {
-                    $institutions->orderBy('name');
-                }])
-                ->with(['roles' => function ($roles) use ($request, $system) {
-                    $roles
-                        ->with('system')
-                        ->with(['permissions' => function ($permissions) {
-                            $permissions->with(['route' => function ($route) {
-                                $route->with('module')->with('type')->with('images')->with('status');
-                            }])->with('institution');
-                        }])->where('system_id', $system->id);
-                }])
-                ->paginate($request->per_page);
-        }
+        $data = $request->json()->all();
+        $user = User::findOrFail($data['user_id']);
+
+        $roles = $user->roles()
+            ->where('institution_id', $data['institution_id'])
+            ->get();
         return response()->json([
-            'data' => $users,
+            'data' => $roles,
             'msg' => [
                 'summary' => 'success',
                 'detail' => '',
@@ -63,9 +36,75 @@ class  UserController extends Controller
             ]], 200);
     }
 
+    public function getPermissions(Request $request)
+    {
+        $data = $request->json()->all();
+        $role = Role::findOrFail($data['role_id']);
+
+        $permissions = $role->permissions()
+            ->with(['route' => function ($route) {
+                $route->with('module')->with('type')->with('image')->with('status');
+            }])
+            ->with('institution')
+            ->where('institution_id', $data['institution_id'])
+            ->get();
+        return response()->json([
+            'data' => $permissions,
+            'msg' => [
+                'summary' => 'success',
+                'detail' => '',
+                'code' => '200'
+            ]], 200);
+    }
+
+    public function index(Request $request)
+    {
+        if ($request->has('conditions') && $request->conditions && $request->conditions != 'undefined') {
+            $users = User::where(function ($query) use ($request) {
+                $query->orWhere($this->filter($request->conditions));
+            })
+                ->whereHas('institutions', function ($institutions) use ($request) {
+                    $institutions->where('institutions.id', $request->institution_id);
+                })
+                ->with(['institutions' => function ($institutions) {
+                    $institutions->orderBy('name');
+                }])
+                ->with(['roles' => function ($roles) use ($request) {
+                    $roles
+                        ->with('system')
+                        ->with(['permissions' => function ($permissions) {
+                            $permissions->with(['route' => function ($route) {
+                                $route->with('module')->with('type')->with('images')->with('status');
+                            }])->with('institution');
+                        }]);
+                }])
+                ->orderBy('first_lastname')
+                ->paginate($request->per_page);
+        } else {
+            $users = User::
+            whereHas('institutions', function ($institutions) use ($request) {
+                $institutions->where('institutions.id', $request->institution_id);
+            })
+                ->with(['institutions' => function ($institutions) {
+                    $institutions->orderBy('name');
+                }])
+                ->with(['roles' => function ($roles) use ($request) {
+                    $roles
+                        ->with('system')
+                        ->with(['permissions' => function ($permissions) {
+                            $permissions->with(['route' => function ($route) {
+                                $route->with('module')->with('type')->with('images')->with('status');
+                            }])->with('institution');
+                        }]);
+                }])
+                ->orderBy('first_lastname')
+                ->paginate($request->per_page);
+        }
+        return response()->json($users, 200);
+    }
+
     public function show($username, Request $request)
     {
-        $system = System::where('code', $request->system_code)->first();
         $user = User::
         with('ethnicOrigin')
             ->with('location')
@@ -76,17 +115,18 @@ class  UserController extends Controller
             ->with(['institutions' => function ($institutions) {
                 $institutions->orderBy('name');
             }])
-            ->with(['roles' => function ($roles) use ($request, $system) {
+            ->with(['roles' => function ($roles) use ($request) {
                 $roles
                     ->with('system')
                     ->with(['permissions' => function ($permissions) {
                         $permissions->with(['route' => function ($route) {
-                            $route->with('module')->with('type')->with('images')->with('status');
+                            $route->with('module')->with('type')->with('status');
                         }])->with('institution');
-                    }])->where('system_id', $system->id);
+                    }]);
             }])
             ->where('username', $username)
             ->first();
+
         return response()->json([
             'data' => $user,
             'msg' => [

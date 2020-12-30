@@ -3,6 +3,7 @@
 namespace App\Models\Authentication;
 
 use App\Models\Ignug\Catalogue;
+use App\Models\Ignug\Institution;
 use App\Models\Ignug\State;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -59,5 +60,10 @@ class Role extends Model implements Auditable
     public function catalogues()
     {
         return $this->morphToMany(Catalogue::class,'catalogueable');
+    }
+
+    public function institution()
+    {
+        return $this->belongsTo(Institution::class);
     }
 }

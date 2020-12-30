@@ -14,6 +14,7 @@ class Permission extends Model implements Auditable
     use \OwenIt\Auditing\Auditable;
 
     protected $connection = 'pgsql-authentication';
+    protected $table = 'authentication.permissions';
 
     const CREATE_ACTION = 'CREATE';
     const UPDATE_ACTION = 'UPDATE';

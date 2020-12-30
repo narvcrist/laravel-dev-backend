@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Ignug;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CreateInstitutionRequest;
 use App\Http\Requests\UpdateInstitutionRequest;
+use App\Models\Authentication\Permission;
+use App\Models\Authentication\Role;
+use App\Models\Authentication\User;
 use App\Models\Ignug\Institution;
 use App\Models\Ignug\State;
 use Illuminate\Http\Request;
@@ -72,5 +75,42 @@ class InstitutionController extends Controller
                 'type' => 'institution'
             ]
         ], 201);
+    }
+
+    public function assignInstitution(Request $request)
+    {
+        $data = $request->json()->all();
+
+        $institution = Institution::findOrFail($data['institution_id']);
+        $user = User::findOrFail($data['user_id']);
+
+        $user->institutions()->syncWithoutDetaching($institution->id);
+
+        return response()->json(['data' => null,
+            'msg' => [
+                'summary' => 'success',
+                'detail' => '',
+                'code' => '200'
+            ]], 200);
+    }
+
+    public function removeInstitution(Request $request)
+    {
+        $data = $request->json()->all();
+        $institution = Institution::findOrFail($data['institution_id']);
+        $user = User::findOrFail($request->user_id);
+        $roles = Role::where('institution_id', $data['institution_id'])->get();
+
+        foreach ($roles as $role) {
+            $user->roles()->detach($role->id);
+        }
+        $user->institutions()->detach($institution->id);
+
+        return response()->json(['data' => null,
+            'msg' => [
+                'summary' => 'success',
+                'detail' => '',
+                'code' => '200'
+            ]], 200);
     }
 }

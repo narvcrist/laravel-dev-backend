@@ -8,9 +8,14 @@ use Illuminate\Http\Request;
 
 class PermissionController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json(['data' => Permission::all()], 200);
+        $permissions = Permission::with('route')->where('institution_id', $request->institution_id)->get();
+        return response()->json(['data' => $permissions, 'msg' => [
+            'summary' => 'success',
+            'detail' => '',
+            'code' => '200'
+        ]], 200);
     }
 
     public function store(Request $request)

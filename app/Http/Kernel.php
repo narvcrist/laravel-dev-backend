@@ -43,6 +43,8 @@ class Kernel extends HttpKernel
         'api' => [
             'throttle:api',
             'auth:api',
+            'check-institution',
+            'check-role',
             'check-status',
             'check-attempts',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
@@ -67,6 +69,8 @@ class Kernel extends HttpKernel
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'client-credentials' => CheckClientCredentials::class,
+        'check-institution' => Middleware\CheckInstitution::class,
+        'check-role' => Middleware\CheckRole::class,
         'check-attempts' => Middleware\CheckAttempts::class,
         'check-status' => Middleware\CheckStatus::class,
     ];

@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Ignug\CatalogueController;
 use App\Http\Controllers\Ignug\ImageController;
 use App\Http\Controllers\Ignug\TeacherController;
+use App\Http\Controllers\Ignug\InstitutionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -27,3 +28,7 @@ Route::group(['prefix' => 'teachers'], function () {
     Route::post('upload_image', [TeacherController::class, 'uploadImage']);
 });
 
+Route::group(['prefix' => 'institutions'], function () {
+    Route::post('assign_institution', [InstitutionController::class, 'assignInstitution']);
+    Route::post('remove_institution', [InstitutionController::class, 'removeInstitution']);
+});

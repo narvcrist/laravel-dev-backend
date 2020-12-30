@@ -14,6 +14,8 @@ class CreateShortcutsTable extends Migration
             $table->foreignId('role_id');
             $table->foreignId('permission_id');
             $table->string('image');
+            $table->unique(['user_id', 'role_id', 'permission_id']);
+
             $table->timestamps();
         });
     }
