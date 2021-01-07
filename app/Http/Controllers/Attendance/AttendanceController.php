@@ -261,8 +261,8 @@ class AttendanceController extends Controller
                     'msg' => [
                         'summary' => 'Ha excedido el limite maximo',
                         'detail' => 'No puede iniciar otra jornada',
-                        'code' => '403',
-                    ]], 403);
+                        'code' => '422',
+                    ]], 422);
             }
 
         }
@@ -279,8 +279,8 @@ class AttendanceController extends Controller
                     'msg' => [
                         'summary' => 'Ha excedido el limite maximo',
                         'detail' => 'No puede iniciar otro almuerzo',
-                        'code' => '403',
-                    ]], 403);
+                        'code' => '422',
+                    ]], 422);
             }
         }
 

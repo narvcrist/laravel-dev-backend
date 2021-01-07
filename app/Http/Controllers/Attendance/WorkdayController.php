@@ -121,6 +121,7 @@ class WorkdayController extends Controller
         }
 
         $attendance = $user->attendances()->where('date', $currentDate)->where('institution_id', $request->institution_id)->first();
+
         if (!$attendance) {
             $attendance = $this->createAttendance($request->institution_id, $currentDate, $user);
         }
@@ -136,8 +137,8 @@ class WorkdayController extends Controller
                     'msg' => [
                         'summary' => 'Ya tiene otra jornada iniciada',
                         'detail' => 'Debe finalizar antes de iniciar otra',
-                        'code' => '403',
-                    ]], 403);
+                        'code' => '422',
+                    ]], 422);
             }
 
             if (sizeof($works) > 1) {
@@ -146,8 +147,8 @@ class WorkdayController extends Controller
                     'msg' => [
                         'summary' => 'Ha excedido el limite maximo',
                         'detail' => 'No puede iniciar otra jornada',
-                        'code' => '403',
-                    ]], 403);
+                        'code' => '422',
+                    ]], 422);
             }
 
         }
@@ -157,15 +158,28 @@ class WorkdayController extends Controller
                 ->where('type_id', Catalogue::where('code', $catalogues['workday']['type']['lunch'])
                     ->where('type', $catalogues['workday']['type']['type'])->first()->id)
                 ->get();
+            $works = $attendance->workdays()
+                ->where('type_id', Catalogue::where('code',
+                    $catalogues['workday']['type']['work'])->where('type', $catalogues['workday']['type']['type'])->first()->id)
+                ->get();
 
+            if (sizeof($works) === 0) {
+                return response()->json([
+                    'data' => null,
+                    'msg' => [
+                        'summary' => 'Debe iniciar primero su jornada',
+                        'detail' => '',
+                        'code' => '404',
+                    ]], 404);
+            }
             if (sizeof($lunchs) > 0) {
                 return response()->json([
                     'data' => null,
                     'msg' => [
                         'summary' => 'Ha excedido el limite maximo',
                         'detail' => 'No puede iniciar otro almuerzo',
-                        'code' => '403',
-                    ]], 403);
+                        'code' => '422',
+                    ]], 422);
             }
         }
         $dataWorkday['start_time'] = $currentTime;
@@ -221,8 +235,8 @@ class WorkdayController extends Controller
                 'msg' => [
                     'summary' => 'Debe finalizar el almuerzo',
                     'detail' => 'Intente de nuevo',
-                    'code' => '403',
-                ]], 403);
+                    'code' => '422',
+                ]], 422);
         }
         if ($workday !== null && $workday->end_time === null) {
             $workday->update([

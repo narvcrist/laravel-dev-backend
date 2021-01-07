@@ -11,9 +11,20 @@ class CatalogueController extends Controller
 {
     public function index(Request $request)
     {
+        if ($request->has('parent_id')) {
+            $parent = Catalogue::firstWhere('parent_id', $request->parent_id);
+            $catalogues = $parent->children()->where('type', $request->type)->get();
+        } else {
+            $catalogues = Catalogue::where('type', $request->type)->get();
+        }
         return response()->json([
             'data' => [
-                'catalogues' => Catalogue::where('type',$request->type)->get()
+                'catalogues' => $catalogues
+            ],
+            'msg' => [
+                'summary' => 'success',
+                'detail' => '',
+                'code' => '200'
             ]]);
     }
 
@@ -22,7 +33,7 @@ class CatalogueController extends Controller
         return response()->json([
             'data' => [
                 'catalogue' => $catalogue
-            ]]);
+            ]], 200);
     }
 
     public function store(Request $request)

@@ -16,13 +16,14 @@ class CheckRole
      */
     public function handle(Request $request, Closure $next)
     {
+
         $roles = $request->user()->roles()->where('institution_id',$request->institution_id)->get();
 
         if (sizeof($roles) === 0) {
             return response()->json([
                 'data' => $roles,
                 'msg' => [
-                    'summary' => 'No tiene un rol asignado',
+                    'summary' => 'No tiene un rol asignado (check-role)',
                     'detail' => 'Comunicate con el administrador',
                     'code' => '403'
                 ]

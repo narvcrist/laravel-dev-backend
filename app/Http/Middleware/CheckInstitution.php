@@ -22,7 +22,7 @@ class CheckInstitution
             return response()->json([
                 'data' => null,
                 'msg' => [
-                    'summary' => 'No tiene una institución asignada',
+                    'summary' => 'No tiene una institución asignada (check-institution)',
                     'detail' => 'Comunicate con el administrador',
                     'code' => '403'
                 ]
