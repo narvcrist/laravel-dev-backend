@@ -19,6 +19,11 @@ Route::apiResource('evaluation_types',EvaluationTypeController::class);
 Route::apiResource('questions', QuestionController::class);
 Route::apiResource('answers', AnswerController::class);
 
+Route::get('evaluations/registered_self_evaluations', [EvaluationController::class, 'registeredSelfEvaluation']);
+Route::get('evaluations/teacher_evaluations', [EvaluationController::class, 'teacherEvaluation']);
+
+
+
 Route::apiResource('evaluations', EvaluationController::class);
 Route::apiResource('detail_evaluations', DetailEvaluationController::class);
 Route::apiResource('student_evaluations', StudentEvaluationController::class);
@@ -31,10 +36,11 @@ Route::get('catalogues', [CatalogueController::class, 'index']);
 Route::get('types_questions/self_evaluations', [QuestionByEvaluationTypeController::class, 'selfEvaluation']);
 Route::get('types_questions/student_evaluations', [QuestionByEvaluationTypeController::class, 'studentEvaluation']);
 Route::get('types_questions/pair_evaluations', [QuestionByEvaluationTypeController::class, 'pairEvaluation']);
-
-Route::post('types_questions/registered_self_evaluations', [QuestionByEvaluationTypeController::class, 'registeredSelfEvaluation']);
-Route::post('types_questions/teacher_evaluations', [QuestionByEvaluationTypeController::class, 'teacherEvaluation']);
+Route::get('types_questions/authorities', [QuestionByEvaluationTypeController::class, 'authorityEvaluation']);
 
 Route::post('evaluations/student_evaluations',[StudentEvaluationController::class, 'calculateResults']);
 Route::post('evaluations/pair_evaluations',[EvaluationController::class,'updateEvaluationPair']);
+Route::post('evaluations/authorities',[EvaluationController::class,'updateEvaluationAuthorityEvaluator']);
+
+
 

@@ -4,12 +4,8 @@ namespace App\Http\Controllers\TeacherEval;
 
 use App\Http\Controllers\Controller;
 use App\Models\Ignug\State;
-use App\Models\Ignug\Teacher;
-use App\Models\Ignug\Authority;
 use App\Models\TeacherEval\AnswerQuestion;
 use App\Models\TeacherEval\DetailEvaluation;
-use App\Models\TeacherEval\Evaluation;
-use App\Models\TeacherEval\EvaluationType;
 use App\Models\TeacherEval\PairResult;
 use Illuminate\Http\Request;
 
@@ -17,8 +13,7 @@ class PairEvaluationController extends Controller
 {
     public function index()
     {
-        $state = State::where('code', '1')->first();
-        $pairResults = PairResult::with('status')->where('state_id', $state->id)->get();
+        $pairResults = PairResult::with('status')->get();
 
         if (sizeof($pairResults) === 0) {
             return response()->json([
@@ -60,10 +55,11 @@ class PairEvaluationController extends Controller
     public function storeTeacherEvalutor(Request $request)
     {
         $catalogues = json_decode(file_get_contents(storage_path() . '/catalogues.json'), true);
-        
+
         $data = $request->json()->all();
 
         $dataDetailEvaluation = $data['detail_evaluation'];
+
         $dataAnswerQuestions = $data['answer_questions'];
         $detailEvaluation = DetailEvaluation::findOrFail($dataDetailEvaluation['id']);
 
@@ -82,9 +78,11 @@ class PairEvaluationController extends Controller
 
         }
         if (sizeOf($dataAnswerQuestions) > 0) {
+
             $detailEvaluation->result = $result / sizeOf($dataAnswerQuestions);
             $detailEvaluation->save();
         }
+
         if (!$pairResult) {
             return response()->json([
                 'data' => null,
@@ -103,4 +101,52 @@ class PairEvaluationController extends Controller
 
     }
 
+    public function storeAuthorityEvaluator(Request $request)
+    {
+        $catalogues = json_decode(file_get_contents(storage_path() . '/catalogues.json'), true);
+
+        $data = $request->json()->all();
+
+        $dataDetailEvaluation = $data['detail_evaluation'];
+
+        $dataAnswerQuestions = $data['answer_questions'];
+        $detailEvaluation = DetailEvaluation::findOrFail($dataDetailEvaluation['id']);
+
+        $result = 0;
+
+        foreach ($dataAnswerQuestions as $answer) {
+            $answerQuestion = AnswerQuestion::with('answer')->findOrFail($answer['id']);
+
+            $pairResult = new PairResult;
+            $pairResult->answerQuestion()->associate($answerQuestion);
+            $pairResult->detailEvaluation()->associate($detailEvaluation);
+            $pairResult->state()->associate(State::firstWhere('code', $catalogues['state']['type']['active'])->first());
+            $pairResult->save();
+
+            $result += (int) $answerQuestion->answer->value;
+
+        }
+        if (sizeOf($dataAnswerQuestions) > 0) {
+
+            $detailEvaluation->result = $result / sizeOf($dataAnswerQuestions);
+            $detailEvaluation->save();
+        }
+
+        if (!$pairResult) {
+            return response()->json([
+                'data' => null,
+                'msg' => [
+                    'summary' => 'Evaluación no creada',
+                    'detail' => 'Intenta de nuevo',
+                    'code' => '404',
+                ]], 404);
+        }
+        return response()->json(['data' => $pairResult,
+            'msg' => [
+                'summary' => 'Evaluación creada',
+                'detail' => 'Se creó correctamente las evaluación',
+                'code' => '201',
+            ]], 201);
+
+    }
 }

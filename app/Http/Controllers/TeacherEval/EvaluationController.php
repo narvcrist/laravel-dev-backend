@@ -16,11 +16,8 @@ class EvaluationController extends Controller
 {
     public function index()
     {
-        $catalogues = json_decode(file_get_contents(storage_path() . '/catalogues.json'), true);
-        $state = State::where('code', $catalogues['state']['type']['active'])->first();
-
         $evaluations = Evaluation::with('teacher', 'evaluationType', 'status', 'detailEvaluations', 'schoolPeriod')
-            ->where('state_id', $state->id)->get();
+            ->get();
 
         if (sizeof($evaluations) === 0) {
             return response()->json([
@@ -149,15 +146,13 @@ class EvaluationController extends Controller
     {
         $evaluation = Evaluation::findOrFail($id);
 
-        $evaluation->state_id = '3';
+        $evaluation->state_id = '2';
         $evaluation->save();
 
-        $detailEvaluations = DetailEvaluation::firstWhere('evaluation_id', $id)->get();
-        foreach ($detailEvaluations as $detailEvaluation) {
-            $detailEvaluation->state_id = '3';
-            $detailEvaluation->save();
-        }
-
+        $detailEvaluation = DetailEvaluation::Where('evaluation_id', $id)->first();
+        $detailEvaluation->state_id = '2';
+        $detailEvaluation->save();
+       
         if (!$evaluation) {
             return response()->json([
                 'data' => null,
@@ -214,4 +209,139 @@ class EvaluationController extends Controller
                 'code' => '201',
             ]], 201);
     }
+
+    public function updateEvaluationAuthorityEvaluator()
+    {
+        $evaluationTypeTeaching = EvaluationType::firstWhere('code', '9');
+        $evaluationTypeManagement = EvaluationType::firstWhere('code', '10');
+
+        $teachers = Teacher::get();
+        foreach ($teachers as $teacher) {
+            $evaluations = Evaluation::where('school_period_id', 1)->where('teacher_id', $teacher->id)
+                ->where(function ($query) use ($evaluationTypeTeaching, $evaluationTypeManagement) {
+                    $query->where('evaluation_type_id', $evaluationTypeTeaching->id)
+                        ->OrWhere('evaluation_type_id', $evaluationTypeManagement->id);
+                })
+                ->get();
+            foreach ($evaluations as $evaluation) {
+                $result = 0;
+                foreach ($evaluation->detailEvaluations as $detailEvaluation) {
+                    $result += $detailEvaluation->result;
+                }
+                $evaluation->result = $result / sizeOf($evaluation->detailEvaluations);
+                $evaluation->save();
+            }
+        }
+
+        if (!$evaluation) {
+            return response()->json([
+                'data' => null,
+                'msg' => [
+                    'summary' => 'Evaluación no creada',
+                    'detail' => 'Intenta de nuevo',
+                    'code' => '404',
+                ]], 404);
+        }
+        return response()->json(['data' => $evaluation,
+            'msg' => [
+                'summary' => 'Evaluación creada',
+                'detail' => 'Se creó correctamente evaluación',
+                'code' => '201',
+            ]], 201);
+    }
+
+    public function registeredSelfEvaluation(Request $request)
+    {
+        $evaluationTypeTeaching = EvaluationType::firstWhere('code', '3');
+        $evaluationTypeManagement = EvaluationType::firstWhere('code', '4');
+
+        $teacher = Teacher::firstWhere('user_id', $request->user_id); //Es Temporal, viene por un interceptor
+        $status = Catalogue::where('type', 'STATUS')->Where('code', '1')->first();
+        $schoolPeriod = SchoolPeriod::firstWhere('status_id', $status->id);//El id del status es Temporal
+
+        $evaluations = Evaluation::where(function ($query) use ($evaluationTypeTeaching,$evaluationTypeManagement) {
+            $query->where('evaluation_type_id', $evaluationTypeTeaching->id)
+            ->orWhere('evaluation_type_id', $evaluationTypeManagement->id);
+        })
+        ->where('teacher_id', $teacher->id)
+        ->where('school_period_id', $schoolPeriod->id)
+        ->where('status_id', $status->id)
+        ->get();
+        if (sizeof($evaluations)=== 0) {
+            return response()->json([
+                'data' => null,
+                'msg' => [
+                    'summary' => 'No hay autoEvaluación registrada',
+                    'detail' => 'Intenta de nuevo',
+                    'code' => '404'
+                ]], 404);
+        }
+        return response()->json(['data' => $evaluations,
+            'msg' => [
+                'summary' => 'AutoEvaluaciones',
+                'detail' => 'AutoEvaluacion ya está registrada',
+                'code' => '201',
+            ]], 200);
+    }
+    public function teacherEvaluation(Request $request)
+    {
+        $teacher = Teacher::firstWhere('user_id', $request->user_id); //Es Temporal, viene por un interceptor
+        $status = Catalogue::where('type', 'STATUS')->Where('code', '1')->first();
+        $schoolPeriod = SchoolPeriod::firstWhere('status_id', $status->id);//El 1 es Temporal
+
+        $evaluations = Evaluation::with('teacher', 'evaluationType', 'status', 'detailEvaluations', 'schoolPeriod')
+        ->where('teacher_id', $teacher->id)
+        ->where('school_period_id', $schoolPeriod->id)
+        ->where('status_id', $status->id)
+        ->get();
+
+        if (!$evaluations) {
+            return response()->json([
+                'data' => null,
+                'msg' => [
+                    'summary' => 'El docente no tiene evaluaciones',
+                    'detail' => 'Intenta de nuevo',
+                    'code' => '404'
+                ]], 404);
+        }
+        return response()->json(['data' => $evaluations,
+            'msg' => [
+                'summary' => 'Evaluaciones del docente',
+                'detail' => 'Se consultó correctamente las evaluaciones',
+                'code' => '201',
+            ]], 200);
+    }
+    // public function registeredStudentEvaluation(Request $request)
+    // {
+    //     $evaluationTypeTeaching = EvaluationType::firstWhere('code', '5');
+    //     $evaluationTypeManagement = EvaluationType::firstWhere('code', '6');
+
+    //     $teacher = Teacher::firstWhere('user_id', $request->user_id); //Es Temporal, viene por un interceptor
+    //     $status = Catalogue::where('type', 'STATUS')->Where('code', '1')->first();
+    //     $schoolPeriod = SchoolPeriod::firstWhere('status_id', $status->id);//El id del status es Temporal
+
+    //     $evaluations = Evaluation::where(function ($query) use ($evaluationTypeTeaching,$evaluationTypeManagement) {
+    //         $query->where('evaluation_type_id', $evaluationTypeTeaching->id)
+    //         ->orWhere('evaluation_type_id', $evaluationTypeManagement->id);
+    //     })
+    //     ->where('teacher_id', $teacher->id)
+    //     ->where('school_period_id', $schoolPeriod->id)
+    //     ->where('status_id', $status->id)
+    //     ->get();
+    //     if (sizeof($evaluations)=== 0) {
+    //         return response()->json([
+    //             'data' => null,
+    //             'msg' => [
+    //                 'summary' => 'No hay autoEvaluación registrada',
+    //                 'detail' => 'Intenta de nuevo',
+    //                 'code' => '404'
+    //             ]], 404);
+    //     }
+    //     return response()->json(['data' => $evaluations,
+    //         'msg' => [
+    //             'summary' => 'AutoEvaluaciones',
+    //             'detail' => 'AutoEvaluacion ya está registrada',
+    //             'code' => '201',
+    //         ]], 200);
+    // }
 }
