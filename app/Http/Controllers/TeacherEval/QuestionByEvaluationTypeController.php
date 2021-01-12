@@ -11,10 +11,12 @@ class QuestionByEvaluationTypeController extends Controller
 {
     public function selfEvaluation()
     {
+        $catalogues = json_decode(file_get_contents(storage_path() . "/catalogues.json"), true);
+
         $evaluationTypeDocencia = EvaluationType::where('code', '3')->first();
         $evaluationTypeGestion = EvaluationType::where('code', '4')->first();
 
-        $status = Catalogue::where('type', 'STATUS')->Where('code', '1')->first();
+        $status = Catalogue::where('type', $catalogues['status']['type']['type'])->Where('code', $catalogues['status']['type']['active'])->first();
 
         $questions = Question::with(['evaluationType', 'answers' => function ($query) use ($status) {
             $query->where('status_id', $status->id)
@@ -86,7 +88,7 @@ class QuestionByEvaluationTypeController extends Controller
 
         $evaluationTypeDocencia = EvaluationType::where('code', '7')->first();
         $evaluationTypeGestion = EvaluationType::where('code', '8')->first();
-        $status = Catalogue::where('type', 'STATUS')->Where('code', '1')->first();
+        $status = Catalogue::where('type', $catalogues['status']['type']['type'])->Where('code', $catalogues['state']['type']['active'])->first();
 
         $question = Question::with(['evaluationType', 'answers' => function ($query) use ($status) {
             $query->where('status_id', $status->id);
