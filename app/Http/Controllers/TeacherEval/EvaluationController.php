@@ -252,12 +252,14 @@ class EvaluationController extends Controller
 
     public function registeredSelfEvaluation(Request $request)
     {
+        $catalogues = json_decode(file_get_contents(storage_path() . "/catalogues.json"), true);
+
         $evaluationTypeTeaching = EvaluationType::firstWhere('code', '3');
         $evaluationTypeManagement = EvaluationType::firstWhere('code', '4');
 
-        $teacher = Teacher::firstWhere('user_id', $request->user_id); //Es Temporal, viene por un interceptor
-        $status = Catalogue::where('type', 'STATUS')->Where('code', '1')->first();
-        $schoolPeriod = SchoolPeriod::firstWhere('status_id', $status->id);//El id del status es Temporal
+        $teacher = Teacher::firstWhere('user_id', $request->user_id);
+        $status = Catalogue::where('type',  $catalogues['status']['type']['type'])->Where('code',$catalogues['status']['type']['active'] )->first();
+        $schoolPeriod = SchoolPeriod::firstWhere('status_id', $status->id);
 
         $evaluations = Evaluation::where(function ($query) use ($evaluationTypeTeaching,$evaluationTypeManagement) {
             $query->where('evaluation_type_id', $evaluationTypeTeaching->id)
@@ -285,8 +287,10 @@ class EvaluationController extends Controller
     }
     public function teacherEvaluation(Request $request)
     {
+        $catalogues = json_decode(file_get_contents(storage_path() . "/catalogues.json"), true);
+
         $teacher = Teacher::firstWhere('user_id', $request->user_id); //Es Temporal, viene por un interceptor
-        $status = Catalogue::where('type', 'STATUS')->Where('code', '1')->first();
+        $status = Catalogue::where('type',  $catalogues['status']['type']['type'])->Where('code',$catalogues['status']['type']['active'] )->first();
         $schoolPeriod = SchoolPeriod::firstWhere('status_id', $status->id);//El 1 es Temporal
 
         $evaluations = Evaluation::with('teacher', 'evaluationType', 'status', 'detailEvaluations', 'schoolPeriod')
