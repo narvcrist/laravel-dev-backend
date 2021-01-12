@@ -88,7 +88,7 @@ class QuestionByEvaluationTypeController extends Controller
 
         $evaluationTypeDocencia = EvaluationType::where('code', '7')->first();
         $evaluationTypeGestion = EvaluationType::where('code', '8')->first();
-        $status = Catalogue::where('type', 'STATUS')->Where('code', '1')->first();
+        $status = Catalogue::where('type', $catalogues['status']['type']['type'])->Where('code', $catalogues['state']['type']['active'])->first();
 
         $question = Question::with(['evaluationType', 'answers' => function ($query) use ($status) {
             $query->where('status_id', $status->id);

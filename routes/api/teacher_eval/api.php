@@ -11,7 +11,7 @@ use App\Http\Controllers\TeacherEval\DetailEvaluationController;
 use App\Http\Controllers\TeacherEval\StudentEvaluationController;
 use App\Http\Controllers\TeacherEval\CatalogueController;
 use App\Http\Controllers\TeacherEval\QuestionByEvaluationTypeController;
-
+use App\Http\Controllers\Ignug\TeacherController;
 
 
 
@@ -23,7 +23,7 @@ Route::get('evaluations/registered_self_evaluations', [EvaluationController::cla
 Route::get('evaluations/teacher_evaluations', [EvaluationController::class, 'teacherEvaluation']);
 
 
-
+Route::apiResource('teachers', TeacherController::class);
 Route::apiResource('evaluations', EvaluationController::class);
 Route::apiResource('detail_evaluations', DetailEvaluationController::class);
 Route::apiResource('student_evaluations', StudentEvaluationController::class);
