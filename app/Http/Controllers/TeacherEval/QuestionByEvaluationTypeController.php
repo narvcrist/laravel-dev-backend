@@ -47,11 +47,10 @@ class QuestionByEvaluationTypeController extends Controller
 
     public function studentEvaluation()
     {
-        $evaluationTypeDocencia = EvaluationType::where('code', '5')->first();
-        $evaluationTypeGestion = EvaluationType::where('code', '6')->first();
-
-        $status = Catalogue::where('type', 'STATUS')->Where('code', '1')->first();
-
+        $catalogues = json_decode(file_get_contents(storage_path() . "/catalogues.json"), true);
+        $evaluationTypeDocencia = EvaluationType::where('code', $catalogues['evaluation']['type']['student_evaluation_teaching'])->first();
+        $evaluationTypeGestion = EvaluationType::where('code', $catalogues['evaluation']['type']['student_evaluation_management'])->first();
+        $status = Catalogue::where('type', $catalogues['status']['type']['type'])->Where('code', $catalogues['status']['type']['active'])->first();
         $questions = Question::with(['evaluationType', 'answers' => function ($query) use ($status) {
             $query->where('status_id', $status->id)
                 ->orderBy('order');
@@ -63,10 +62,6 @@ class QuestionByEvaluationTypeController extends Controller
             })
             ->orderBy('order')
             ->get();
-        // $question = Question::with('answers')
-        //     ->where('evaluation_type_id', $evaluationTypeDocencia->id)
-        //     ->orWhere('evaluation_type_id', $evaluationTypeGestion->id)
-        //     ->get();
 
         if (sizeof($questions) === 0) {
             return response()->json([

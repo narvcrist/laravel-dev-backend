@@ -51,7 +51,7 @@ class EvaluationTypeController extends Controller
 
        $dataEvaluationType = $data['evaluationType'];
        //$dataParentCode = $data['parent_code'];
-       $state = State::firstWhere('code', $catalogues['state']['type']['active']);
+       $state = State::firstWhere('code', $catalogues['state']['type']['active']);     
        $dataStatus= $data['status'];
 
         $evaluationType = new EvaluationType();
@@ -60,7 +60,7 @@ class EvaluationTypeController extends Controller
         $evaluationType->percentage = $dataEvaluationType['percentage'];
         $evaluationType->global_percentage = $dataEvaluationType['global_percentage'];
 
-        $status = Catalogue::find($dataStatus['id']);
+        $status = Catalogue::where('type', $catalogues['status']['type']['type'])->Where('code', $catalogues['status']['type']['active'])->first();
         //$parentCode = EvaluationType::find($dataParentCode['id']);
         $evaluationType->status()->associate($status);
         $evaluationType->state()->associate($state);

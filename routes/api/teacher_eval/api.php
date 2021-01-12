@@ -42,5 +42,7 @@ Route::post('evaluations/student_evaluations',[StudentEvaluationController::clas
 Route::post('evaluations/pair_evaluations',[EvaluationController::class,'updateEvaluationPair']);
 Route::post('evaluations/authorities',[EvaluationController::class,'updateEvaluationAuthorityEvaluator']);
 
+Route::get('getevaluation', [StudentEvaluationController::class, 'getEvaluation']);
+
 
 

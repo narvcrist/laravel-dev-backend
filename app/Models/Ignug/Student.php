@@ -4,17 +4,15 @@ namespace App\Models\Ignug;
 
 use App\Models\Authentication\User;
 use App\Models\Attendance\Attendance;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\TeacherEval\DetailEvaluation;
 use Illuminate\Database\Eloquent\Model;
 use OwenIt\Auditing\Contracts\Auditable;
 
-class Teacher extends Model implements Auditable
+class Student extends Model implements Auditable
 {
     use \OwenIt\Auditing\Auditable;
-    use HasFactory;
-    protected $connection = 'pgsql-ignug';
-    protected $table = 'ignug.teachers';
 
+    protected $connection = 'pgsql-ignug';
     protected $fillable = [];
 
     public function user()
@@ -32,12 +30,12 @@ class Teacher extends Model implements Auditable
         return $this->belongsTo(State::class);
     }
 
-    public function images()
-    {
-        return $this->morphMany(Image::class, 'imageable');
-    }
     public function careers()
     {
-        return $this->morphToMany(Career::class,'careerable','ignug.careerables');
+        return $this->morphToMany(Career::class, 'careerable');
+    }
+
+    public function detailEvaluations(){
+        return $this->morphToMany(DetailEvaluation::class, 'detail_evaluationable','detail_evaluations','detail_evaluationable_id','detail_evaluationable_type');
     }
 }

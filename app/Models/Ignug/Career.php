@@ -41,4 +41,8 @@ class Career extends Model implements Auditable
     {
         return $this->belongsTo(State::class);
     }
+    public function teachers()
+    {
+        return $this->morphedByMany(Teacher::class,'careerable','ignug.careerables');
+    }
 }

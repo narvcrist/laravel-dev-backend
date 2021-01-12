@@ -159,5 +159,14 @@
             "technology": "TECHNOLOGY",
             "technical": "TECHNICAL"
         }
+    },
+    "evaluation": {
+        "type": {
+            "type": "EVALUATION_TYPE",
+            "student_evaluation_teaching": "5",
+            "student_evaluation_management": "6"
+        }
     }
+
+
 }

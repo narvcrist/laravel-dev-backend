@@ -51,11 +51,11 @@ class StudentEvaluationController extends Controller
 
         foreach($dataAnswerQuestions as $answerQuestion)
         {
+            $catalogues = json_decode(file_get_contents(storage_path() . "/catalogues.json"), true);
             
             $studentResult= new StudentResult();
-            $state = State::where('code','1')->first();
+            $state = State::firstWhere('code', $catalogues['state']['type']['active']);
             $subjectTeacher = SubjectTeacher::findOrFail($dataSubjectTeacher['id']);
-            //$student = Student::firstWhere($dataUser['id']);
             $student = Student::findOrFail($dataStudent['id']);
             
             
@@ -85,33 +85,22 @@ class StudentEvaluationController extends Controller
     }
 
 
-     //Metodo para realizar los calculos y sacar la nota de docencia y gestion con el porcentaje aplicado.
-    public function getResultStudent( $teacherId, $AnswerQuestions ){
-        
-        $resultEvaluation = 0;
-        foreach($AnswerQuestions as $eachAnswerQuestion){
-
-            $answerQuestion = AnswerQuestion::where('id',$eachAnswerQuestion['id'])->first();
-            $value = $answerQuestion->answer()->first()->value;
-            $evaluationTypeId = $answerQuestion->question()->first()->evaluation_type_id;
-            $evaluationTypeParent = EvaluationType::where('id',$evaluationTypeId)->first();
-            $percentage = $evaluationTypeParent->parent()->first()->percentage;
-            
-            $resultEvaluation += ($value*$percentage)/100;
-
-        }
-        $this->createEvaluation($teacherId,$evaluationTypeId,$resultEvaluation);
-    }
+     //Calcula el result en la tabla evaluation y crea sus campos
+    
     public function createEvaluation($teacher,$schoolPeriod,$result,$evaluationType){
+        
+            $catalogues = json_decode(file_get_contents(storage_path() . "/catalogues.json"), true);
         
             $evaluation = new Evaluation();
 
             $evaluation->teacher()->associate($teacher);   
             $evaluation->schoolPeriod()->associate($schoolPeriod);            
             $evaluation->result = $result;
-            $state = State::where('code','1')->first();
+            $state = State::firstWhere('code', $catalogues['state']['type']['active']);
             $evaluation->state()->associate($state); 
-            $status = Catalogue::where('code','1')->where('type','STATUS')->first();      
+            //pendiente
+            //$catalogues = json_decode(file_get_contents(storage_path() . "/catalogues.json"), true);
+            $status = Catalogue::where('type', $catalogues['status']['type']['type'])->Where('code', $catalogues['status']['type']['active'])->first()->id;   
             $evaluation->status()->associate($status);         
             $evaluation->evaluationType ()->associate($evaluationType);
             $evaluation->save();
@@ -124,13 +113,15 @@ class StudentEvaluationController extends Controller
 
     //Metodo para calcular.
     public function calculateResults( Request $request){
-        //$schoolPeriod= SchoolPeriod::firstWhere('status_id',1);
-        $status = Catalogue::where('code','1')->where('type','STATUS')->first()->id;
-        $schoolPeriod= SchoolPeriod::firstWhere('status_id',$status);      
-        $teachers= Teacher::get();
-        
-        $evaluationTypeDocencia = EvaluationType::firstWhere('code','5');  //docencia
-        $evaluationTypeGestion = EvaluationType::firstWhere('code','6');  //gestion
+        $catalogues = json_decode(file_get_contents(storage_path() . "/catalogues.json"), true);     
+        $status = Catalogue::where('type', $catalogues['status']['type']['type'])->Where('code', $catalogues['status']['type']['active'])->first()->id;
+
+        $schoolPeriod= SchoolPeriod::firstWhere('status_id',$status);   
+
+        $teachers= Teacher::whereHas('careers')->get();
+        $evaluationTypeDocencia = EvaluationType::where('code', $catalogues['evaluation']['type']['student_evaluation_teaching'])->first();
+        $evaluationTypeGestion = EvaluationType::where('code', $catalogues['evaluation']['type']['student_evaluation_management'])->first();
+
         foreach($teachers as $teacher){
             $subjectTeachers = SubjectTeacher::where('school_period_id',$schoolPeriod->id)
             ->where('teacher_id',$teacher->id)
@@ -183,12 +174,15 @@ class StudentEvaluationController extends Controller
 
             }
             if(sizeof($subjectTeachers)>0){
+                $catalogues = json_decode(file_get_contents(storage_path() . "/catalogues.json"), true);     
+
                 $evaluation= Evaluation::where('school_period_id', $schoolPeriod->id)
                 ->where('teacher_id',$teacher->id)
                 ->where('evaluation_type_id',$evaluationTypeDocencia->id)->first();
                 if($evaluation){
                     if( $evaluation->result!=$resultadoDocencia/sizeof($subjectTeachers)){
-                        $status = Catalogue::where('code','2')->where('type','STATUS')->first();
+                       // $status = Catalogue::where('code','2')->where('type','STATUS_TYPE')->first();
+                        $status = Catalogue::where('type', $catalogues['status']['type']['type'])->Where('code', $catalogues['status']['type']['inactive'])->first();
                         $evaluation->status()->associate($status);
                         $evaluation->save();
                         $result=$resultadoDocencia/sizeof($subjectTeachers);
@@ -205,7 +199,8 @@ class StudentEvaluationController extends Controller
                 ->where('evaluation_type_id',$evaluationTypeGestion->id)->first();
                 if($evaluation){
                     if( $evaluation->result!=$resultadoGestion/sizeof($subjectTeachers)){
-                        $status = Catalogue::where('code','2')->where('type','STATUS')->first();
+                        //$status = Catalogue::where('code','2')->where('type','STATUS_TYPE')->first();
+                        $status = Catalogue::where('type', $catalogues['status']['type']['type'])->Where('code', $catalogues['status']['type']['inactive'])->first();
                         $evaluation->status()->associate($status);
                         $evaluation->save();
                         $result=$resultadoGestion/sizeof($subjectTeachers);
@@ -244,6 +239,12 @@ class StudentEvaluationController extends Controller
 
     public function destroy($id){
         return $id;
+    }
+    public function getEvaluation(Request $request){
+        
+
+        $teachers= Teacher::whereHas('careers')->get();
+        return $teachers;
     }
 
 }
