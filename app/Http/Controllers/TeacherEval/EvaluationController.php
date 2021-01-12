@@ -289,9 +289,9 @@ class EvaluationController extends Controller
     {
         $catalogues = json_decode(file_get_contents(storage_path() . "/catalogues.json"), true);
 
-        $teacher = Teacher::firstWhere('user_id', $request->user_id); //Es Temporal, viene por un interceptor
+        $teacher = Teacher::firstWhere('user_id', $request->user_id);
         $status = Catalogue::where('type',  $catalogues['status']['type']['type'])->Where('code',$catalogues['status']['type']['active'] )->first();
-        $schoolPeriod = SchoolPeriod::firstWhere('status_id', $status->id);//El 1 es Temporal
+        $schoolPeriod = SchoolPeriod::firstWhere('status_id', $status->id);
 
         $evaluations = Evaluation::with('teacher', 'evaluationType', 'status', 'detailEvaluations', 'schoolPeriod')
         ->where('teacher_id', $teacher->id)
@@ -299,7 +299,7 @@ class EvaluationController extends Controller
         ->where('status_id', $status->id)
         ->get();
 
-        if (!$evaluations) {
+        if (sizeof($evaluations)=== 0) {
             return response()->json([
                 'data' => null,
                 'msg' => [
