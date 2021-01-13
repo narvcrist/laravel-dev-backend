@@ -25,7 +25,8 @@ class SelfEvaluationController extends Controller
         $dataAnswerQuestions = $data['answer_questions'];
         $teacher = Teacher::firstWhere('user_id', $request->user_id);// user_id viene de un interceptor
         $state = State::firstWhere('code', $catalogues['state']['type']['active']);
-        $schoolPeriod = SchoolPeriod::firstWhere('status_id', Catalogue::where('type', 'STATUS')->Where('code', '1')->first()->id);//El id del status es Temporal
+        $status = Catalogue::where('type', $catalogues['status']['type']['type'])->Where('code', $catalogues['status']['type']['active'])->first();
+        $schoolPeriod = SchoolPeriod::firstWhere('status_id', $status->id);
         /*                 $from = date('2020-12-01');
                         $to = date('2021-06-01'); */
         //Obetenemos las fechas de inicio y fin del periodo para valiadar la obtencion de respuestas de selfEvaluation.
@@ -133,7 +134,7 @@ class SelfEvaluationController extends Controller
         $evaluation->percentage = $evaluationType->percentage;
 
         $state = State::firstWhere('code', $catalogues['state']['type']['active']);
-        $status = Catalogue::where('type', 'STATUS')->Where('code', '1')->first();
+        $status = Catalogue::where('type', $catalogues['status']['type']['type'])->Where('code', $catalogues['status']['type']['active'])->first();
 
         $evaluation->state()->associate($state);
         $evaluation->status()->associate($status);
