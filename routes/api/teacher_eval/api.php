@@ -11,7 +11,9 @@ use App\Http\Controllers\TeacherEval\DetailEvaluationController;
 use App\Http\Controllers\TeacherEval\StudentEvaluationController;
 use App\Http\Controllers\TeacherEval\CatalogueController;
 use App\Http\Controllers\TeacherEval\QuestionByEvaluationTypeController;
+
 use App\Http\Controllers\Ignug\TeacherController;
+use App\Http\Controllers\Ignug\SchoolPeriodController;
 
 
 
@@ -24,6 +26,8 @@ Route::get('evaluations/teacher_evaluations', [EvaluationController::class, 'tea
 
 
 Route::apiResource('teachers', TeacherController::class);
+Route::apiResource('school_periods', SchoolPeriodController::class);
+
 Route::apiResource('evaluations', EvaluationController::class);
 Route::apiResource('detail_evaluations', DetailEvaluationController::class);
 Route::apiResource('student_evaluations', StudentEvaluationController::class);
