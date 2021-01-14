@@ -15,7 +15,7 @@ class QuestionByEvaluationTypeController extends Controller
 
         $evaluationTypeDocencia = EvaluationType::where('code', $catalogues["evaluation"]["type"]["self_evaluation_teaching"])->first();
         $evaluationTypeGestion = EvaluationType::where('code', $catalogues["evaluation"]["type"]["self_evaluation_management"])->first();
-
+       
         $status = Catalogue::where('type', $catalogues['status']['type']['type'])->Where('code', $catalogues['status']['type']['active'])->first();
 
         $questions = Question::with(['evaluationType', 'answers' => function ($query) use ($status) {
@@ -84,21 +84,26 @@ class QuestionByEvaluationTypeController extends Controller
 
     public function pairEvaluation()
     {
-        $catalogues = json_decode(file_get_contents(storage_path() . '/catalogues.json'), true);
+        $catalogues = json_decode(file_get_contents(storage_path() . "/catalogues.json"), true);
 
-        $evaluationTypeDocencia = EvaluationType::where('code', '7')->first();
-        $evaluationTypeGestion = EvaluationType::where('code', '8')->first();
-        $status = Catalogue::where('type', $catalogues['status']['type']['type'])->Where('code', $catalogues['state']['type']['active'])->first();
+        $evaluationTypeDocencia = EvaluationType::where('code', $catalogues['evaluation']['type']['pair_evaluation_teaching'])->first();
+        $evaluationTypeGestion = EvaluationType::where('code', $catalogues['evaluation']['type']['pair_evaluation_management'])->first();
+       
+        $status = Catalogue::where('type', $catalogues['status']['type']['type'])->Where('code', $catalogues['status']['type']['active'])->first();
 
-        $question = Question::with(['evaluationType', 'answers' => function ($query) use ($status) {
-            $query->where('status_id', $status->id);
-        }])->where('status_id', $status->id)
+        $questions = Question::with(['evaluationType', 'answers' => function ($query) use ($status) {
+            $query->where('status_id', $status->id)
+                ->orderBy('order');
+        }])
+            ->where('status_id', $status->id)
             ->where(function ($query) use ($evaluationTypeDocencia, $evaluationTypeGestion) {
                 $query->where('evaluation_type_id', $evaluationTypeDocencia->id)
                     ->orWhere('evaluation_type_id', $evaluationTypeGestion->id);
-            })->get();
+            })
+            ->orderBy('order')
+            ->get();
 
-        if (sizeof($question) === 0) {
+        if (sizeof($questions) === 0) {
             return response()->json([
                 'data' => null,
                 'msg' => [
@@ -107,7 +112,7 @@ class QuestionByEvaluationTypeController extends Controller
                     'code' => '404',
                 ]], 404);
         }
-        return response()->json(['data' => $question,
+        return response()->json(['data' => $questions,
             'msg' => [
                 'summary' => 'Preguntas',
                 'detail' => 'Se consultó correctamente preguntas',

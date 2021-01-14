@@ -166,9 +166,13 @@
             "self_evaluation_teaching":"3",
             "self_evaluation_management": "4",
             "student_evaluation_teaching": "5",
-            "student_evaluation_management": "6"
+            "student_evaluation_management": "6",
+            "pair_evaluation_teaching": "7",
+            "pair_evaluation_management": "8"
         }
     }
 
 
 }
+
+
