@@ -254,8 +254,8 @@ class EvaluationController extends Controller
     {
         $catalogues = json_decode(file_get_contents(storage_path() . "/catalogues.json"), true);
 
-        $evaluationTypeTeaching = EvaluationType::firstWhere('code', '3');
-        $evaluationTypeManagement = EvaluationType::firstWhere('code', '4');
+        $evaluationTypeTeaching = EvaluationType::firstWhere('code', $catalogues["evaluation"]["type"]["self_evaluation_teaching"]);
+        $evaluationTypeManagement = EvaluationType::firstWhere('code', $catalogues["evaluation"]["type"]["self_evaluation_management"]);
 
         $teacher = Teacher::firstWhere('user_id', $request->user_id);
         $status = Catalogue::where('type',  $catalogues['status']['type']['type'])->Where('code',$catalogues['status']['type']['active'] )->first();

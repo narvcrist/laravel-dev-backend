@@ -33,8 +33,8 @@ class SelfEvaluationController extends Controller
         $startDatePeriod = date($schoolPeriod->start_date);
         $endDatePeriod = date($schoolPeriod->end_date);
 
-        $evaluationTypeTeaching = EvaluationType::firstWhere('code', '3');
-        $evaluationTypeManagement = EvaluationType::firstWhere('code', '4');
+        $evaluationTypeTeaching = EvaluationType::firstWhere('code', $catalogues["evaluation"]["type"]["self_evaluation_teaching"]);
+        $evaluationTypeManagement = EvaluationType::firstWhere('code', $catalogues["evaluation"]["type"]["self_evaluation_management"]);
 
         $teacherHasEvaluation = Evaluation::where(function ($query) use ($evaluationTypeTeaching,$evaluationTypeManagement) {
             $query->where('evaluation_type_id', $evaluationTypeTeaching->id)

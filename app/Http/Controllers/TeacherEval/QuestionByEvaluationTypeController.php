@@ -13,8 +13,8 @@ class QuestionByEvaluationTypeController extends Controller
     {
         $catalogues = json_decode(file_get_contents(storage_path() . "/catalogues.json"), true);
 
-        $evaluationTypeDocencia = EvaluationType::where('code', '3')->first();
-        $evaluationTypeGestion = EvaluationType::where('code', '4')->first();
+        $evaluationTypeDocencia = EvaluationType::where('code', $catalogues["evaluation"]["type"]["self_evaluation_teaching"])->first();
+        $evaluationTypeGestion = EvaluationType::where('code', $catalogues["evaluation"]["type"]["self_evaluation_management"])->first();
 
         $status = Catalogue::where('type', $catalogues['status']['type']['type'])->Where('code', $catalogues['status']['type']['active'])->first();
 

@@ -163,6 +163,8 @@
     "evaluation": {
         "type": {
             "type": "EVALUATION_TYPE",
+            "self_evaluation_teaching":"3",
+            "self_evaluation_management": "4",
             "student_evaluation_teaching": "5",
             "student_evaluation_management": "6"
         }
