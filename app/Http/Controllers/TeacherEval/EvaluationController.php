@@ -16,8 +16,18 @@ class EvaluationController extends Controller
 {
     public function index()
     {
-        $evaluations = Evaluation::with('teacher', 'evaluationType', 'status', 'detailEvaluations', 'schoolPeriod')
-            ->get();
+        $catalogues = json_decode(file_get_contents(storage_path() . '/catalogues.json'), true);
+        
+        $evaluationTypeDocencia = EvaluationType::where('code', '7')->first();
+        $evaluationTypeGestion = EvaluationType::where('code', '8')->first();
+        $status = Catalogue::where('type', $catalogues['status']['type']['type'])->Where('code', $catalogues['state']['type']['active'])->first();
+
+        $evaluations = Evaluation::with(['teacher', 'evaluationType', 'status', 'detailEvaluations', 'schoolPeriod'  => function ($query) use ($status) {
+            $query->where('status_id', $status->id);
+        }])->where(function ($query) use ($evaluationTypeDocencia, $evaluationTypeGestion) {
+            $query->where('evaluation_type_id', $evaluationTypeDocencia->id)
+                ->orWhere('evaluation_type_id', $evaluationTypeGestion->id);
+        })->get();
 
         if (sizeof($evaluations) === 0) {
             return response()->json([
@@ -149,10 +159,6 @@ class EvaluationController extends Controller
         $evaluation->state_id = '2';
         $evaluation->save();
 
-        $detailEvaluation = DetailEvaluation::Where('evaluation_id', $id)->first();
-        $detailEvaluation->state_id = '2';
-        $detailEvaluation->save();
-       
         if (!$evaluation) {
             return response()->json([
                 'data' => null,
@@ -162,6 +168,16 @@ class EvaluationController extends Controller
                     'code' => '404',
                 ]], 404);
         }
+
+        $detailEvaluations = DetailEvaluation::Where('evaluation_id', $id)->get();
+        
+        if($detailEvaluations){
+            foreach($detailEvaluations as $detailEvaluation){
+                $detailEvaluation->state_id = '2';
+                $detailEvaluation->save();
+            }
+        }
+       
         return response()->json(['data' => $evaluation,
             'msg' => [
                 'summary' => 'Evaluación',
