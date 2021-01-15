@@ -25,15 +25,16 @@ class SelfEvaluationController extends Controller
         $dataAnswerQuestions = $data['answer_questions'];
         $teacher = Teacher::firstWhere('user_id', $request->user_id);// user_id viene de un interceptor
         $state = State::firstWhere('code', $catalogues['state']['type']['active']);
-        $schoolPeriod = SchoolPeriod::firstWhere('status_id', Catalogue::where('type', 'STATUS')->Where('code', '1')->first()->id);//El id del status es Temporal
+        $status = Catalogue::where('type', $catalogues['status']['type']['type'])->Where('code', $catalogues['status']['type']['active'])->first();
+        $schoolPeriod = SchoolPeriod::firstWhere('status_id', $status->id);
         /*                 $from = date('2020-12-01');
                         $to = date('2021-06-01'); */
         //Obetenemos las fechas de inicio y fin del periodo para valiadar la obtencion de respuestas de selfEvaluation.
         $startDatePeriod = date($schoolPeriod->start_date);
         $endDatePeriod = date($schoolPeriod->end_date);
 
-        $evaluationTypeTeaching = EvaluationType::firstWhere('code', '3');
-        $evaluationTypeManagement = EvaluationType::firstWhere('code', '4');
+        $evaluationTypeTeaching = EvaluationType::firstWhere('code', $catalogues["evaluation"]["type"]["self_evaluation_teaching"]);
+        $evaluationTypeManagement = EvaluationType::firstWhere('code', $catalogues["evaluation"]["type"]["self_evaluation_management"]);
 
         $teacherHasEvaluation = Evaluation::where(function ($query) use ($evaluationTypeTeaching,$evaluationTypeManagement) {
             $query->where('evaluation_type_id', $evaluationTypeTeaching->id)
@@ -133,7 +134,7 @@ class SelfEvaluationController extends Controller
         $evaluation->percentage = $evaluationType->percentage;
 
         $state = State::firstWhere('code', $catalogues['state']['type']['active']);
-        $status = Catalogue::where('type', 'STATUS')->Where('code', '1')->first();
+        $status = Catalogue::where('type', $catalogues['status']['type']['type'])->Where('code', $catalogues['status']['type']['active'])->first();
 
         $evaluation->state()->associate($state);
         $evaluation->status()->associate($status);

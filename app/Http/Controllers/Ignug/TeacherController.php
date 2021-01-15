@@ -34,7 +34,7 @@ class TeacherController extends Controller
         return response()->json(['data' => $teachers,
             'msg' => [
                 'summary' => 'Docentes',
-                'detail' => 'Se consulto correctamente preguntas',
+                'detail' => 'Se consulto correctamente',
                 'code' => '200',
             ]], 200);
     }
