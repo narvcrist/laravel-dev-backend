@@ -15,7 +15,12 @@ class DetailEvaluationController extends Controller
 {
     public function index(Request $request)
     {
-        $detailEvaluations = DetailEvaluation::with('evaluation')->where('detail_evaluationable_id', $request->user_id)
+        $catalogues = json_decode(file_get_contents(storage_path() . '/catalogues.json'), true);
+        $state = State::where('code', $catalogues['state']['type']['active'])->first();
+
+        $detailEvaluations = DetailEvaluation::with(['evaluation' => function ($query) use ($state) {
+            $query->where('state_id', $state->id);
+        }])->where('detail_evaluationable_id', $request->user_id)
             ->where('result', null)->get();
 
         if (sizeof($detailEvaluations) !== 0) {

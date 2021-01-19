@@ -11,7 +11,6 @@ use App\Http\Controllers\TeacherEval\DetailEvaluationController;
 use App\Http\Controllers\TeacherEval\StudentEvaluationController;
 use App\Http\Controllers\TeacherEval\CatalogueController;
 use App\Http\Controllers\TeacherEval\QuestionByEvaluationTypeController;
-
 use App\Http\Controllers\Ignug\TeacherController;
 use App\Http\Controllers\Ignug\SchoolPeriodController;
 
@@ -23,11 +22,12 @@ Route::apiResource('answers', AnswerController::class);
 
 Route::get('evaluations/registered_self_evaluations', [EvaluationController::class, 'registeredSelfEvaluation']);
 Route::get('evaluations/teacher_evaluations', [EvaluationController::class, 'teacherEvaluation']);
+Route::get('evaluations/student_evaluations', [StudentEvaluationController::class, 'studentEvaluation']);
+Route::get('evaluations/registered_student_evaluations', [StudentEvaluationController::class, 'registeredStudentEvaluation']);
 
 
 Route::apiResource('teachers', TeacherController::class);
 Route::apiResource('school_periods', SchoolPeriodController::class);
-
 Route::apiResource('evaluations', EvaluationController::class);
 Route::apiResource('detail_evaluations', DetailEvaluationController::class);
 Route::apiResource('student_evaluations', StudentEvaluationController::class);
@@ -46,7 +46,7 @@ Route::post('evaluations/student_evaluations',[StudentEvaluationController::clas
 Route::post('evaluations/pair_evaluations',[EvaluationController::class,'updateEvaluationPair']);
 Route::post('evaluations/authorities',[EvaluationController::class,'updateEvaluationAuthorityEvaluator']);
 
-Route::get('getevaluation', [StudentEvaluationController::class, 'getEvaluation']);
+Route::get('getevaluations', [StudentEvaluationController::class, 'getEvaluations']);
 
 
 

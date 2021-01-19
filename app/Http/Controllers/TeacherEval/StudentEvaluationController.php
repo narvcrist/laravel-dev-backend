@@ -15,6 +15,7 @@ use App\Models\TeacherEval\AnswerQuestion;
 use App\Models\TeacherEval\Evaluation;
 use App\Models\Ignug\SchoolPeriod;
 use App\Models\Ignug\Teacher;
+use App\Models\Authentication\User;
 
 
 class StudentEvaluationController extends Controller
@@ -39,50 +40,6 @@ class StudentEvaluationController extends Controller
             ]], 200);
     } 
 
-    public function store(Request $request)
-    {
-       $data = $request->json()->all();
-
-    //    $dataStudentResult= $data['student_result'];
-       $dataSubjectTeacher = $data['subject_teacher'];
-       $dataAnswerQuestions = $data['answer_questions'];
-       //$dataUser= $data['user'];  
-       $dataStudent= $data['student'];
-
-        foreach($dataAnswerQuestions as $answerQuestion)
-        {
-            $catalogues = json_decode(file_get_contents(storage_path() . "/catalogues.json"), true);
-            
-            $studentResult= new StudentResult();
-            $state = State::firstWhere('code', $catalogues['state']['type']['active']);
-            $subjectTeacher = SubjectTeacher::findOrFail($dataSubjectTeacher['id']);
-            $student = Student::findOrFail($dataStudent['id']);
-            
-            
-            $studentResult->state()->associate($state);
-            $studentResult->subjectTeacher()->associate($subjectTeacher);
-            $studentResult->student()->associate($student);
-            $studentResult->answerQuestion()->associate(AnswerQuestion::findOrFail($answerQuestion['id']));
-            $studentResult->save();
-
-        }
-        
-        if (!$studentResult) {
-            return response()->json([
-                'data' => null,
-                'msg' => [
-                    'summary' => 'Evaluacion de Estudiante a Docentes no encontradas',
-                    'detail' => 'Intenta de nuevo',
-                    'code' => '404'
-                ]], 404);
-        }
-        return response()->json(['data' => $studentResult,
-            'msg' => [
-                'summary' => 'Evaluación Exitosa!',
-                'detail' => 'Se completo correctamente evaluación Estudiante Docente',
-                'code' => '200',
-            ]], 200);
-    }
 
 
      //Calcula el result en la tabla evaluation y crea sus campos
@@ -102,7 +59,7 @@ class StudentEvaluationController extends Controller
             //$catalogues = json_decode(file_get_contents(storage_path() . "/catalogues.json"), true);
             $status = Catalogue::where('type', $catalogues['status']['type']['type'])->Where('code', $catalogues['status']['type']['active'])->first()->id;   
             $evaluation->status()->associate($status);         
-            $evaluation->evaluationType ()->associate($evaluationType);
+            $evaluation->evaluationType()->associate($evaluationType);
             $evaluation->save();
              
             return $evaluation;
@@ -174,15 +131,12 @@ class StudentEvaluationController extends Controller
 
             }
             if(sizeof($subjectTeachers)>0){
-                $catalogues = json_decode(file_get_contents(storage_path() . "/catalogues.json"), true);     
-
                 $evaluation= Evaluation::where('school_period_id', $schoolPeriod->id)
                 ->where('teacher_id',$teacher->id)
                 ->where('evaluation_type_id',$evaluationTypeDocencia->id)->first();
                 if($evaluation){
                     if( $evaluation->result!=$resultadoDocencia/sizeof($subjectTeachers)){
-                       // $status = Catalogue::where('code','2')->where('type','STATUS_TYPE')->first();
-                        $status = Catalogue::where('type', $catalogues['status']['type']['type'])->Where('code', $catalogues['status']['type']['inactive'])->first();
+                        $status = Catalogue::where('code','2')->where('type','STATUS_TYPE')->first();
                         $evaluation->status()->associate($status);
                         $evaluation->save();
                         $result=$resultadoDocencia/sizeof($subjectTeachers);
@@ -199,13 +153,13 @@ class StudentEvaluationController extends Controller
                 ->where('evaluation_type_id',$evaluationTypeGestion->id)->first();
                 if($evaluation){
                     if( $evaluation->result!=$resultadoGestion/sizeof($subjectTeachers)){
-                        //$status = Catalogue::where('code','2')->where('type','STATUS_TYPE')->first();
-                        $status = Catalogue::where('type', $catalogues['status']['type']['type'])->Where('code', $catalogues['status']['type']['inactive'])->first();
+                        $status = Catalogue::where('code','2')->where('type','STATUS_TYPE')->first();
                         $evaluation->status()->associate($status);
                         $evaluation->save();
                         $result=$resultadoGestion/sizeof($subjectTeachers);
                         $evaluation= $this->createEvaluation($teacher,$schoolPeriod,$result,$evaluationTypeGestion);
                     }
+
 
                 }else{   
                     $result=$resultadoGestion/sizeof($subjectTeachers);
@@ -232,6 +186,123 @@ class StudentEvaluationController extends Controller
             ]], 200);
 
        
+    }
+    
+    public function store(Request $request)
+    {
+        $catalogues = json_decode(file_get_contents(storage_path() . "/catalogues.json"), true);
+
+       $data = $request->json()->all();
+
+    //    $dataStudentResult= $data['student_result'];
+       $dataSubjectTeacher = $data['subject_teacher'];
+       $dataAnswerQuestions = $data['answer_questions'];
+       //$dataUser= $data['user'];  
+       $dataStudent= $data['student'];
+
+        foreach($dataAnswerQuestions as $answerQuestion)
+        {
+            $catalogues = json_decode(file_get_contents(storage_path() . "/catalogues.json"), true);
+            
+            $studentResult= new StudentResult();
+            $state = State::firstWhere('code', $catalogues['state']['type']['active']);
+            $subjectTeacher = SubjectTeacher::findOrFail($dataSubjectTeacher['id']);
+            $student = Student::findOrFail($dataStudent['id']);
+            // $students=Student::firstWhere('user_id', $request->user_id);
+            // $student=Student::where('student_id', $students->id);
+            
+            
+            $studentResult->state()->associate($state);
+            $studentResult->subjectTeacher()->associate($subjectTeacher);
+            $studentResult->student()->associate($student);
+            $studentResult->answerQuestion()->associate(AnswerQuestion::findOrFail($answerQuestion['id']));
+            $studentResult->save();
+
+        }
+        if (!$studentResult) {
+            return response()->json([
+                'data' => null,
+                'msg' => [
+                    'summary' => 'Evaluacion de Estudiante a Docentes no encontradas',
+                    'detail' => 'Intenta de nuevo',
+                    'code' => '404'
+                ]], 404);
+        }
+        return response()->json(['data' => $studentResult,
+            'msg' => [
+                'summary' => 'Evaluación Exitosa!',
+                'detail' => 'Se completo correctamente evaluación Estudiante Docente',
+                'code' => '200',
+            ]], 200);
+    }
+  
+
+    public function studentEvaluation(Request $request)
+    {
+        $catalogues = json_decode(file_get_contents(storage_path() . "/catalogues.json"), true);
+
+        $user= User::all();
+        $teacher = Teacher::with('user')->get();
+        
+        $status = Catalogue::where('type',  $catalogues['status']['type']['type'])->Where('code',$catalogues['status']['type']['active'] )->first();
+        $schoolPeriod = SchoolPeriod::firstWhere('status_id', $status->id);
+ 
+        $number = sprintf('%.2f', $num);
+        $evaluations = Evaluation::with('teacher','evaluationType', 'status', 'schoolPeriod')
+        ->where('school_period_id', $schoolPeriod->id)
+        ->where('status_id', $status->id)
+        ->where('result','>','0')
+        ->get();
+
+        if (sizeof($evaluations)=== 0) {
+            return response()->json([
+                'data' => null,
+                'msg' => [
+                    'summary' => 'El docente no tiene evaluaciones',
+                    'detail' => 'Intenta de nuevo',
+                    'code' => '404'
+                ]], 404);
+        }
+        return response()->json(['data' => $evaluations,
+            'msg' => [
+                'summary' => 'Evaluaciones del docente',
+                'detail' => 'Se consultó correctamente las evaluaciones',
+                'code' => '201',
+            ]], 200);
+    }
+    public function registeredStudentEvaluation(Request $request)
+    {
+        $catalogues = json_decode(file_get_contents(storage_path() . "/catalogues.json"), true);
+
+        $evaluationTypeTeaching = EvaluationType::firstWhere('code', '5');
+        $evaluationTypeManagement = EvaluationType::firstWhere('code', '6');
+
+        $status = Catalogue::where('type',  $catalogues['status']['type']['type'])->Where('code',$catalogues['status']['type']['active'] )->first();
+        $schoolPeriod = SchoolPeriod::firstWhere('status_id', $status->id);
+
+        $evaluations = Evaluation::where(function ($query) use ($evaluationTypeTeaching,$evaluationTypeManagement) {
+            $query->where('evaluation_type_id', $evaluationTypeTeaching->id)
+            ->orWhere('evaluation_type_id', $evaluationTypeManagement->id);
+        })
+        ->with('teacher')
+        ->where('school_period_id', $schoolPeriod->id)
+        ->where('status_id', $status->id)
+        ->get();
+        if (sizeof($evaluations)=== 0) {
+            return response()->json([
+                'data' => null,
+                'msg' => [
+                    'summary' => 'No hay autoEvaluación registrada',
+                    'detail' => 'Intenta de nuevo',
+                    'code' => '404'
+                ]], 404);
+        }
+        return response()->json(['data' => $evaluations,
+            'msg' => [
+                'summary' => 'AutoEvaluaciones',
+                'detail' => 'AutoEvaluacion ya está registrada',
+                'code' => '201',
+            ]], 200);
     }
     public function update(Request $request){
         return $request;

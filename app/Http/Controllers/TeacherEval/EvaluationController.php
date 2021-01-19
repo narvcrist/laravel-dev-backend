@@ -18,8 +18,8 @@ class EvaluationController extends Controller
     {
         $catalogues = json_decode(file_get_contents(storage_path() . '/catalogues.json'), true);
         
-        $evaluationTypeDocencia = EvaluationType::where('code', '7')->first();
-        $evaluationTypeGestion = EvaluationType::where('code', '8')->first();
+        $evaluationTypeDocencia = EvaluationType::where('code', $catalogues['evaluation']['type']['pair_evaluation_teaching'])->first();
+        $evaluationTypeGestion = EvaluationType::where('code', $catalogues['evaluation']['type']['pair_evaluation_management'])->first();
         $status = Catalogue::where('type', $catalogues['status']['type']['type'])->Where('code', $catalogues['state']['type']['active'])->first();
 
         $evaluations = Evaluation::with(['teacher', 'evaluationType', 'status', 'detailEvaluations', 'schoolPeriod'  => function ($query) use ($status) {
