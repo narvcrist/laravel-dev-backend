@@ -48,5 +48,4 @@ Route::post('evaluations/authorities',[EvaluationController::class,'updateEvalua
 
 Route::get('getevaluations', [StudentEvaluationController::class, 'getEvaluations']);
 
-
-
+Route::get('registration', [StudentEvaluationController::class, 'registration']);

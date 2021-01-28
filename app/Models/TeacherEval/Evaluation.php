@@ -8,6 +8,7 @@ use App\Models\Ignug\State;
 use App\Models\Ignug\Catalogue;
 use App\Models\Ignug\SchoolPeriod;
 use App\Models\Ignug\Teacher;
+use App\Models\Authentication\User;
 use OwenIt\Auditing\Contracts\Auditable;
 use App\Traits\StatusActiveTrait;
 use App\Traits\StatusDeletedTrait;
@@ -54,6 +55,10 @@ class Evaluation extends Model implements Auditable
     public function schoolPeriod()
     {
         return $this->belongsTo(SchoolPeriod::class);
+    }
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 
 }

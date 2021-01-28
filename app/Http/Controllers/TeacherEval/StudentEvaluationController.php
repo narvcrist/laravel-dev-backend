@@ -13,8 +13,11 @@ use App\Models\Ignug\Catalogue;
 use App\Models\Ignug\SubjectTeacher;
 use App\Models\TeacherEval\AnswerQuestion;
 use App\Models\TeacherEval\Evaluation;
+use App\Models\TeacherEval\Registration;
+use App\Models\TeacherEval\RegistrationDetail;
 use App\Models\Ignug\SchoolPeriod;
 use App\Models\Ignug\Teacher;
+use App\Models\Ignug\Subject;
 use App\Models\Authentication\User;
 
 
@@ -22,6 +25,7 @@ class StudentEvaluationController extends Controller
 {
     
     public function index(){
+
         $studentResult= StudentResult::all();
         if (sizeof($studentResult)=== 0) {
             return response()->json([
@@ -193,25 +197,21 @@ class StudentEvaluationController extends Controller
         $catalogues = json_decode(file_get_contents(storage_path() . "/catalogues.json"), true);
 
        $data = $request->json()->all();
-
-    //    $dataStudentResult= $data['student_result'];
        $dataSubjectTeacher = $data['subject_teacher'];
        $dataAnswerQuestions = $data['answer_questions'];
-       //$dataUser= $data['user'];  
-       $dataStudent= $data['student'];
+       $dataDetail = $data['detail'];
+       $student = Student::firstWhere('user_id', $request->user_id);
+       $state = State::firstWhere('code', $catalogues['state']['type']['active']);
+       $subjectTeacher = SubjectTeacher::findOrFail($dataSubjectTeacher['id']);
+       $detail = RegistrationDetail::findOrFail($dataDetail['id']);
+       $detail->update(['status_evaluation'=> true]);
+
 
         foreach($dataAnswerQuestions as $answerQuestion)
         {
             $catalogues = json_decode(file_get_contents(storage_path() . "/catalogues.json"), true);
             
             $studentResult= new StudentResult();
-            $state = State::firstWhere('code', $catalogues['state']['type']['active']);
-            $subjectTeacher = SubjectTeacher::findOrFail($dataSubjectTeacher['id']);
-            $student = Student::findOrFail($dataStudent['id']);
-            // $students=Student::firstWhere('user_id', $request->user_id);
-            // $student=Student::where('student_id', $students->id);
-            
-            
             $studentResult->state()->associate($state);
             $studentResult->subjectTeacher()->associate($subjectTeacher);
             $studentResult->student()->associate($student);
@@ -219,16 +219,16 @@ class StudentEvaluationController extends Controller
             $studentResult->save();
 
         }
-        if (!$studentResult) {
-            return response()->json([
-                'data' => null,
-                'msg' => [
-                    'summary' => 'Evaluacion de Estudiante a Docentes no encontradas',
-                    'detail' => 'Intenta de nuevo',
-                    'code' => '404'
-                ]], 404);
-        }
-        return response()->json(['data' => $studentResult,
+        // if (!$studentResult) {
+        //     return response()->json([
+        //         'data' => null,
+        //         'msg' => [
+        //             'summary' => 'Evaluacion de Estudiante a Docentes no encontradas',
+        //             'detail' => 'Intenta de nuevo',
+        //             'code' => '404'
+        //         ]], 404);
+        // }
+        return response()->json(['data' => null,
             'msg' => [
                 'summary' => 'Evaluación Exitosa!',
                 'detail' => 'Se completo correctamente evaluación Estudiante Docente',
@@ -241,24 +241,57 @@ class StudentEvaluationController extends Controller
     {
         $catalogues = json_decode(file_get_contents(storage_path() . "/catalogues.json"), true);
 
-        $user= User::all();
-        $teacher = Teacher::with('user')->get();
-        
+        // $teacher = Teacher::with('user')->get();
         $status = Catalogue::where('type',  $catalogues['status']['type']['type'])->Where('code',$catalogues['status']['type']['active'] )->first();
         $schoolPeriod = SchoolPeriod::firstWhere('status_id', $status->id);
- 
-        $number = sprintf('%.2f', $num);
-        $evaluations = Evaluation::with('teacher','evaluationType', 'status', 'schoolPeriod')
+        $state = State::where('code', $catalogues['state']['type']['active'])->first();
+        $user = Teacher::with('state', 'user')->where('state_id', $state->id);
+        $state = State::where('code', $catalogues['state']['type']['active'])->first();
+
+        $evaluations = Evaluation::with('evaluationType', 'status', 'schoolPeriod')
         ->where('school_period_id', $schoolPeriod->id)
         ->where('status_id', $status->id)
         ->where('result','>','0')
         ->get();
+    //     $registrationDetails= Evaluation::where('school_period_id', $schoolPeriod->id)
+    //     ->where('status_id', $status->id)
+    //     ->where('result','>','0')
+    //     ->with(['teacher' => function ($query) use ($state){
+    //             $query->where('state_id', $state->id);
+    //     }])->get();
+      
+    //   $subjectRs= [];
+    //     foreach($registrationDetails as $teacher_id=>$registrationDetail){
+    //         $subjectRs= Evaluation::with('teacher')->get();
+    //     }
+        
 
+    //     $d= $subjectRs[0]->teacher->user_id;
+    //     for($i = 0; $i < count($subjectRs); $i++){
+    //         $title_modal = $subjectRs[$i]->teacher->user_id;
+
+    //     }
+    //     return $title_modal;
+
+    //     $variable=[];
+    //     foreach ($subjectRs as $id=>$subjectR){
+
+    //         $varible= User::where('id', $teacher->user_id);
+    //     }
+        //return $variable;
+
+    
+
+        
+        $subjectProfesor= [];
+        foreach($subjects as $subject_id=>$subject){
+            $subjectProfesor= SubjectTeacher::get('subject_id');
+        }
         if (sizeof($evaluations)=== 0) {
             return response()->json([
                 'data' => null,
                 'msg' => [
-                    'summary' => 'El docente no tiene evaluaciones',
+                    'summary' => 'No existen resultados de Evaluación Estudiante-Docente',
                     'detail' => 'Intenta de nuevo',
                     'code' => '404'
                 ]], 404);
@@ -304,6 +337,65 @@ class StudentEvaluationController extends Controller
                 'code' => '201',
             ]], 200);
     }
+    
+    public function registration(Request $request){
+
+        $catalogues = json_decode(file_get_contents(storage_path() . "/catalogues.json"), true);
+        $status = Catalogue::where('type',  $catalogues['status']['type']['type'])->Where('code',$catalogues['status']['type']['active'] )->first();
+        $student = Student::firstWhere('user_id', $request->user_id);
+        $materias= Subject::where('status_id',$status->id);
+        $schoolPeriod = SchoolPeriod::firstWhere('status_id', $status->id);
+        $subjectTeacher= SubjectTeacher::where('school_period_id', $schoolPeriod->id);
+
+       $studentRegistration= Registration::where('student_id',$student->id)->get()->first();
+       $traer= $studentRegistration['id'];
+       
+       $registrationDetails= RegistrationDetail::where('registration_id',$traer)
+        ->with(['subject' => function ($query) use ($status){
+                $query->where('status_id', $status->id);
+        }])->with('subjectTeacher')->get();
+        return response()->json(['data' => $registrationDetails,
+        'msg' => [
+            'summary' => 'Registration',
+            'detail' => 'Se consulto correctamente',
+            'code' => '200',
+        ]], 200);
+        // $subjectRegistration= [];
+        // foreach($registrationDetails as $subject_id=>$registrationDetail){
+        //     $subjectRegistration= RegistrationDetail::where('registration_id',$traer)->get('subject_id');
+            
+        // }
+        
+        // $subjects = SubjectTeacher::where('subject_id', $registrationDetail->subject_id)
+        // ->with(['subject' => function($query)use ($status){
+        //     $query->where('status_id', $status->id);
+        // }])->get();
+        
+        // $subjectProfesor= [];
+        // foreach($subjects as $subject_id=>$subject){
+        //     $subjectProfesor= SubjectTeacher::get('subject_id');
+        // }
+        
+        // $subjectTeacherId= SubjectTeacher::whereIn('subject_id', $subjectRegistration)->with('teacher','subject')->get();
+        // // return $subjectTeacherId;
+        // if (sizeof($subjectTeacherId)=== 0) {
+        //     return response()->json([
+        //         'data' => null,
+        //         'msg' => [
+        //             'summary' => 'SubjectTeacher no encontrados',
+        //             'detail' => 'Intenta de nuevo',
+        //             'code' => '404'
+        //         ]], 404);
+        // }
+        // return response()->json(['data' => $subjectTeacherId,
+        //     'msg' => [
+        //         'summary' => 'SubjectTeacher',
+        //         'detail' => 'Se consulto correctamente',
+        //         'code' => '200',
+        //     ]], 200);
+
+    }
+
     public function update(Request $request){
         return $request;
     }

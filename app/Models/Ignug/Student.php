@@ -38,4 +38,8 @@ class Student extends Model implements Auditable
     public function detailEvaluations(){
         return $this->morphToMany(DetailEvaluation::class, 'detail_evaluationable','detail_evaluations','detail_evaluationable_id','detail_evaluationable_type');
     }
+    public function registration()
+    {
+        return $this->hasMany(Registration::class);
+    }
 }

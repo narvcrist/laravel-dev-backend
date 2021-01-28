@@ -11,6 +11,7 @@ class CreateSubjectsTable extends Migration
     {
         Schema::connection('pgsql-ignug')->create('subjects', function (Blueprint $table) {
             $table->id();
+            $table->string('name')->comment('Nombre');
             $table->timestamps();
         });
     }
