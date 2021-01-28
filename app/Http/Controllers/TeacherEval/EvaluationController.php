@@ -313,6 +313,7 @@ class EvaluationController extends Controller
         ->where('teacher_id', $teacher->id)
         ->where('school_period_id', $schoolPeriod->id)
         ->where('status_id', $status->id)
+        ->whereNotNull('result')
         ->get();
 
         if (sizeof($evaluations)=== 0) {
